@@ -67,12 +67,17 @@ return [
     ],
 
     'filter' => [
-        'status' => 'Status',
         'priority' => 'Priority',
         'labels' => 'Label',
         'milestone' => 'Milestone',
         'app_version' => 'Version',
         'user' => 'User',
+    ],
+
+    'tab' => [
+        'open' => 'Open',
+        'closed' => 'Closed',
+        'all' => 'All',
     ],
 
     'actions' => [

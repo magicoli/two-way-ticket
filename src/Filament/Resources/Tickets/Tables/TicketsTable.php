@@ -17,7 +17,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Magicoli\TwoWayTicket\Actions\CreateGithubIssue;
 use Magicoli\TwoWayTicket\Enums\TicketPriority;
-use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
 class TicketsTable
@@ -86,30 +85,10 @@ class TicketsTable
             ])
             ->filters(
                 [
-                    // Only open tickets by default — a closed one only matters when specifically
-                    // looked for, and adding "resolved" back to the selection is one click away
-                    // right here (Oli, 2026-07-26). Plain SelectFilter has no way to keep the
-                    // multi-value closed state on one line, so this is a custom Filter+Select
-                    // with wrapOptionLabels(false) instead.
-                    Filter::make('status')
-                        ->label(__('two-way-ticket::two-way-ticket.filter.status'))
-                        ->schema([
-                            Select::make('values')
-                                ->label(__('two-way-ticket::two-way-ticket.filter.status'))
-                                ->options(TicketStatus::class)
-                                ->multiple()
-                                ->native(false)
-                                ->wrapOptionLabels(false)
-                                ->default([
-                                    TicketStatus::New->value,
-                                    TicketStatus::Triaged->value,
-                                    TicketStatus::InProgress->value,
-                                ]),
-                        ])
-                        ->query(fn(Builder $query, array $data): Builder => $query->when(
-                            filled($data['values'] ?? null),
-                            fn(Builder $query): Builder => $query->whereIn('status', $data['values']),
-                        )),
+                    // Open/Closed/All lives in the page's tabs (see ListTickets::getTabs()) as a
+                    // general condition, not here — Oli, 2026-07-26: a per-status select was
+                    // "fragile" (hardcoded New/Triaged/InProgress default) and lacked the simple
+                    // Open/Closed concept he actually wants.
                     SelectFilter::make('priority')
                         ->label(__('two-way-ticket::two-way-ticket.field.priority'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.priority'))
@@ -165,7 +144,7 @@ class TicketsTable
             ->filtersFormColumns([
                 'sm' => 2,
                 'lg' => 3,
-                'xl' => 6,
+                'xl' => 5,
             ])
             ->recordActions([
                 ViewAction::make(),

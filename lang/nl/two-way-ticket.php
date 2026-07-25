@@ -67,12 +67,17 @@ return [
     ],
 
     'filter' => [
-        'status' => 'Status',
         'priority' => 'Prioriteit',
         'labels' => 'Label',
         'milestone' => 'Mijlpaal',
         'app_version' => 'Versie',
         'user' => 'Gebruiker',
+    ],
+
+    'tab' => [
+        'open' => 'Open',
+        'closed' => 'Gesloten',
+        'all' => 'Alle',
     ],
 
     'actions' => [

@@ -67,12 +67,17 @@ return [
     ],
 
     'filter' => [
-        'status' => 'Statut',
         'priority' => 'Priorité',
         'labels' => 'Etiquette',
         'milestone' => 'Jalon',
         'app_version' => 'Version',
         'user' => 'Utilisateur',
+    ],
+
+    'tab' => [
+        'open' => 'Ouverts',
+        'closed' => 'Fermés',
+        'all' => 'Tous',
     ],
 
     'actions' => [
