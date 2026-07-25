@@ -127,6 +127,7 @@ Cible :
 
 ## Nom
 
-**Two-Way Ticket** (confirmé, 2026-07-25) — clin d'œil à *One Way Ticket* (Boney M.), et le nom
+**Two-Way Ticket** (confirmé, 2026-07-25) — clin d'œil à *One Way Ticket* (Eruption, 1979 — repris
+de Neil Sedaka, 1959), et le nom
 décrit littéralement la fonctionnalité centrale : la sync bidirectionnelle avec GitHub.
 Repo : `magicoli/two-way-ticket`.

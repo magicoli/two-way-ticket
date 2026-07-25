@@ -1,6 +1,6 @@
 {
     "name": "magicoli/two-way-ticket",
-    "description": "A Filament ticket tracker with genuinely bidirectional GitHub sync — labels, assignee, milestone, and Projects, aligned on GitHub's own model instead of reinventing it.",
+    "description": "Helpdesk truckin' down the track - Flexible ticketing system for Laravel / Filament",
     "type": "library",
     "license": "AGPL-3.0-or-later",
     "keywords": [
@@ -23,7 +23,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Magicoli\\TwoWayTicket\\": "src/"
+            "Magicoli\\TwoWayTicket\\": "src/",
+            "Magicoli\\TwoWayTicket\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
