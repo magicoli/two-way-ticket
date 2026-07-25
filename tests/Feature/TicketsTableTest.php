@@ -30,3 +30,26 @@ it('hides resolved tickets by default, showing them via the Closed/All tabs inst
         ->set('activeTab', 'all')
         ->assertCanSeeTableRecords([$open, $resolved]);
 });
+
+it('narrows further with the status filter, ANDed with the active tab', function (): void {
+    // Oli, 2026-07-26: "les tabs comme condition supplémentaire (condition des tabs ET
+    // conditions des différents filtres)" — the status filter still picks among the real
+    // statuses (new/triaged/in_progress...), it isn't replaced by the tabs.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    $new = Ticket::factory()->create(['title' => 'Brand new', 'status' => 'new']);
+    $inProgress = Ticket::factory()->create(['title' => 'Being worked on', 'status' => 'in_progress']);
+    $resolved = Ticket::factory()->resolved()->create(['title' => 'Already resolved']);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->filterTable('status', ['values' => ['new']])
+        ->assertCanSeeTableRecords([$new])
+        ->assertCanNotSeeTableRecords([$inProgress, $resolved]);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->set('activeTab', 'closed')
+        ->filterTable('status', ['values' => ['new']])
+        ->assertCanNotSeeTableRecords([$new, $inProgress, $resolved]);
+});
