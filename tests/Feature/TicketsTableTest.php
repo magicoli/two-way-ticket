@@ -19,6 +19,6 @@ it('hides resolved tickets by default, but shows them one filter click away', fu
 
     Livewire::actingAs($user)
         ->test(ListTickets::class)
-        ->filterTable('status', ['new', 'triaged', 'in_progress', 'resolved'])
+        ->filterTable('status', ['values' => ['new', 'triaged', 'in_progress', 'resolved']])
         ->assertCanSeeTableRecords([$open, $resolved]);
 });
