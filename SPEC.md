@@ -117,6 +117,19 @@ Cible :
   tenant-scoping mal maîtrisée) — si un hôte a besoin de scoper par tenant, c'est à lui de le
   faire, le package reste agnostique là-dessus par défaut
 
+**Deux plugins Filament distincts, pas un seul comme cerealkiller** (Oli, 2026-07-25) :
+- `TicketsPlugin` — enregistre la ressource (liste/gestion complète), à attacher uniquement aux
+  panels qui doivent réellement trier les tickets (typiquement 'admin' seul)
+- `ReportIssuePlugin` — ajoute le bouton "Signaler un problème" + une page de signalement
+  autonome, à attacher à TOUS les panels. Emplacement par défaut : `USER_MENU_BEFORE` (dans le
+  menu utilisateur, avant l'en-tête de profil) — configurable via `->renderHook()`. Reste un cas à
+  gérer côté hôte pour les pages anonymes (pas de menu utilisateur à préfixer) — même situation
+  que cerealkiller avec son propre `GLOBAL_SEARCH_AFTER`, pas résolu génériquement par le package
+
+Cette séparation évite structurellement la classe de bug #17/#23 : un panel qui n'a que
+`ReportIssuePlugin` n'a JAMAIS `TicketResource` enregistrée dessus, donc ne peut jamais subir de
+tenant-scoping involontaire.
+
 ## Questions ouvertes (à trancher avant de coder)
 
 1. Labels : synchronisés en LECTURE depuis les labels existants du repo (pas de création de label
