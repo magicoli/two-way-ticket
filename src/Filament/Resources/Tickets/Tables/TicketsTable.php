@@ -115,17 +115,22 @@ class TicketsTable
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.priority'))
                         ->options(TicketPriority::class),
                     Filter::make('labels')
-                        ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                        ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
                         ->schema([
-                            Select::make('value')
-                                ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                                ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
+                            Select::make('values')
+                                ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
                                 ->options(fn(): array => self::distinctLabelOptions())
-                                ->native(false),
+                                ->multiple()
+                                ->native(false)
+                                ->wrapOptionLabels(false),
                         ])
                         ->query(fn(Builder $query, array $data): Builder => $query->when(
-                            filled($data['value'] ?? null),
-                            fn(Builder $query): Builder => $query->whereJsonContains('labels', $data['value']),
+                            filled($data['values'] ?? null),
+                            fn(Builder $query): Builder => $query->where(function (Builder $query) use ($data): void {
+                                foreach ($data['values'] as $label) {
+                                    $query->orWhereJsonContains('labels', $label);
+                                }
+                            }),
                         )),
                     SelectFilter::make('milestone')
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
