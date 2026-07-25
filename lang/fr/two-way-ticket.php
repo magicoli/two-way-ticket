@@ -67,6 +67,7 @@ return [
     ],
 
     'filter' => [
+        'status' => 'Statut',
         'priority' => 'Priorité',
         'labels' => 'Etiquette',
         'milestone' => 'Jalon',

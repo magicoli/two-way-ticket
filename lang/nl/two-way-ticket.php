@@ -67,6 +67,7 @@ return [
     ],
 
     'filter' => [
+        'status' => 'Status',
         'priority' => 'Prioriteit',
         'labels' => 'Label',
         'milestone' => 'Mijlpaal',
