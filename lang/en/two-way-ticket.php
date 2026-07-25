@@ -66,6 +66,15 @@ return [
         'empty' => 'No tickets',
     ],
 
+    'filter' => [
+        'status' => 'All statuses',
+        'priority' => 'All priorities',
+        'labels' => 'All labels',
+        'milestone' => 'All milestones',
+        'app_version' => 'All versions',
+        'user' => 'All reporters',
+    ],
+
     'actions' => [
         'sync_with_github' => 'Sync with GitHub',
         'synced' => 'Synced',

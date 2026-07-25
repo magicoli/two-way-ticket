@@ -90,6 +90,7 @@ class TicketsTable
                 // right here (Oli, 2026-07-26).
                 SelectFilter::make('status')
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
+                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.status'))
                     ->options(TicketStatus::class)
                     ->multiple()
                     ->default([
@@ -99,12 +100,14 @@ class TicketsTable
                     ]),
                 SelectFilter::make('priority')
                     ->label(__('two-way-ticket::two-way-ticket.field.priority'))
+                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.priority'))
                     ->options(TicketPriority::class),
                 Filter::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->schema([
                         Select::make('value')
                             ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                            ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
                             ->options(fn (): array => self::distinctLabelOptions())
                             ->native(false),
                     ])
@@ -114,6 +117,7 @@ class TicketsTable
                     )),
                 SelectFilter::make('milestone')
                     ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
+                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.milestone'))
                     ->options(fn (): array => Ticket::query()
                         ->whereNotNull('milestone')
                         ->distinct()
@@ -122,6 +126,7 @@ class TicketsTable
                         ->all()),
                 SelectFilter::make('app_version')
                     ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
+                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.app_version'))
                     ->options(fn (): array => Ticket::query()
                         ->whereNotNull('app_version')
                         ->where('app_version', '!=', '')
@@ -131,6 +136,7 @@ class TicketsTable
                         ->all()),
                 SelectFilter::make('user')
                     ->label(__('two-way-ticket::two-way-ticket.field.reported_by'))
+                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.user'))
                     ->relationship('user', 'name'),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([

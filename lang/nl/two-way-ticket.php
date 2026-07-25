@@ -66,6 +66,15 @@ return [
         'empty' => 'Geen tickets',
     ],
 
+    'filter' => [
+        'status' => 'Alle statussen',
+        'priority' => 'Alle prioriteiten',
+        'labels' => 'Alle labels',
+        'milestone' => 'Alle mijlpalen',
+        'app_version' => 'Alle versies',
+        'user' => 'Alle melders',
+    ],
+
     'actions' => [
         'sync_with_github' => 'Synchroniseren met GitHub',
         'synced' => 'Gesynchroniseerd',
