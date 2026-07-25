@@ -39,7 +39,40 @@ return [
         'title' => 'Een probleem melden',
         'submit' => 'Versturen',
         'submitted' => 'Bedankt — uw melding is verzonden.',
-        'add_step' => 'Stap toevoegen',
+    ],
+
+    'field' => [
+        'title' => 'Titel',
+        'description' => 'Omschrijving',
+        'steps' => 'Stappen om te reproduceren',
+        'status' => 'Status',
+        'priority' => 'Prioriteit',
+        'labels' => 'Labels',
+        'milestone' => 'Mijlpaal',
+        'page_url' => 'Pagina',
+        'app_version' => 'App-versie',
+        'role' => 'Rol',
+        'reported_by' => 'Gemeld door',
+        'reported_at' => 'Gemeld op',
+        'resolved_at' => 'Opgelost op',
+        'github_issue' => 'GitHub-issue',
+        'github' => 'GitHub',
         'screenshots' => 'Schermafbeeldingen',
+        'details' => 'Details',
+        'add_step' => 'Stap toevoegen',
+    ],
+
+    'table' => [
+        'empty' => 'Geen tickets',
+    ],
+
+    'actions' => [
+        'sync_with_github' => 'Synchroniseren met GitHub',
+        'synced' => 'Gesynchroniseerd',
+        'sync_failed' => 'Synchronisatie mislukt',
+        'sync_result' => ':updated bijgewerkt, :imported geïmporteerd vanaf GitHub.',
+        'push_to_github' => 'Naar GitHub sturen',
+        'pushed_to_github' => 'Naar GitHub gestuurd',
+        'could_not_push' => 'Kon niet naar GitHub sturen',
     ],
 ];

@@ -20,23 +20,25 @@ class TicketForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make(__('Details'))
+            Section::make(__('two-way-ticket::two-way-ticket.field.details'))
                 ->schema([
-                    TextInput::make('title')->required()->maxLength(255)->columnSpanFull(),
-                    Textarea::make('description')->autosize()->columnSpanFull(),
+                    TextInput::make('title')->label(__('two-way-ticket::two-way-ticket.field.title'))->required()->maxLength(255)->columnSpanFull(),
+                    Textarea::make('description')->label(__('two-way-ticket::two-way-ticket.field.description'))->autosize()->columnSpanFull(),
                     Repeater::make('steps')
+                        ->label(__('two-way-ticket::two-way-ticket.field.steps'))
                         ->simple(TextInput::make('step')->required())
                         ->columnSpanFull()
-                        ->addActionLabel(__('Add step')),
-                    Select::make('status')->options(TicketStatus::class)->native(false)->required(),
-                    Select::make('priority')->options(TicketPriority::class)->native(false),
-                    TagsInput::make('labels')->columnSpanFull(),
-                    TextInput::make('milestone'),
+                        ->addActionLabel(__('two-way-ticket::two-way-ticket.field.add_step')),
+                    Select::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->options(TicketStatus::class)->native(false)->required(),
+                    Select::make('priority')->label(__('two-way-ticket::two-way-ticket.field.priority'))->options(TicketPriority::class)->native(false),
+                    TagsInput::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->columnSpanFull(),
+                    TextInput::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
                 ])
                 ->columns(2),
-            Section::make(__('Screenshots'))
+            Section::make(__('two-way-ticket::two-way-ticket.field.screenshots'))
                 ->schema([
                     FileUpload::make('screenshot_paths')
+                        ->hiddenLabel()
                         ->image()
                         ->multiple()
                         ->disk(fn () => config()->string('two-way-ticket.screenshots.disk', 'public'))

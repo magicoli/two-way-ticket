@@ -22,45 +22,48 @@ class TicketsTable
     {
         return $table
             ->defaultSort('created_at', 'desc')
+            ->emptyStateHeading(__('two-way-ticket::two-way-ticket.table.empty'))
             ->columns([
                 // Wide, unwrapped title — SPEC.md §4: "plus de place pour le sujet".
                 TextColumn::make('title')
+                    ->label(__('two-way-ticket::two-way-ticket.field.title'))
                     ->searchable()
                     ->weight('medium')
                     ->grow(),
                 TextColumn::make('labels')
+                    ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->badge()
                     ->separator(',')
                     ->toggleable(),
-                TextColumn::make('status')->badge()->sortable(),
-                TextColumn::make('priority')->badge()->sortable()->placeholder('—'),
+                TextColumn::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->badge()->sortable(),
+                TextColumn::make('priority')->label(__('two-way-ticket::two-way-ticket.field.priority'))->badge()->sortable()->placeholder('—'),
                 TextColumn::make('page_url')
-                    ->label(__('Page'))
+                    ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
                     ->url(fn (Ticket $record): ?string => $record->page_url)
                     ->limit(30)
                     ->placeholder('—')
                     ->toggleable(),
-                TextColumn::make('milestone')->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone'))->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('github_issue_number')
-                    ->label(__('GitHub'))
+                    ->label(__('two-way-ticket::two-way-ticket.field.github'))
                     ->formatStateUsing(fn (?int $state): string => $state === null ? '—' : '#'.$state)
                     ->url(fn (Ticket $record): ?string => $record->github_issue_url)
                     ->openUrlInNewTab()
                     ->badge()
                     ->color('success'),
-                TextColumn::make('app_version')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('user.name')->label(__('Reported by'))->placeholder('—')->toggleable(),
-                TextColumn::make('created_at')->label(__('Reported at'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('app_version')->label(__('two-way-ticket::two-way-ticket.field.app_version'))->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('user.name')->label(__('two-way-ticket::two-way-ticket.field.reported_by'))->placeholder('—')->toggleable(),
+                TextColumn::make('created_at')->label(__('two-way-ticket::two-way-ticket.field.reported_at'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('status')->options(TicketStatus::class),
-                SelectFilter::make('priority')->options(TicketPriority::class),
+                SelectFilter::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->options(TicketStatus::class),
+                SelectFilter::make('priority')->label(__('two-way-ticket::two-way-ticket.field.priority'))->options(TicketPriority::class),
             ])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('pushToGithub')
-                    ->label(__('Push to GitHub'))
+                    ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
                     ->icon('heroicon-o-arrow-up-tray')
                     ->color('gray')
                     ->visible(fn (Ticket $record): bool => ! $record->isLinked() && $record->isSyncable())
@@ -68,12 +71,12 @@ class TicketsTable
                         try {
                             resolve(CreateGithubIssue::class)->handle($record);
                         } catch (\Throwable $throwable) {
-                            Notification::make()->danger()->title(__('Could not push to GitHub'))->body($throwable->getMessage())->send();
+                            Notification::make()->danger()->title(__('two-way-ticket::two-way-ticket.actions.could_not_push'))->body($throwable->getMessage())->send();
 
                             return;
                         }
 
-                        Notification::make()->success()->title(__('Pushed to GitHub'))->send();
+                        Notification::make()->success()->title(__('two-way-ticket::two-way-ticket.actions.pushed_to_github'))->send();
                     }),
             ]);
     }

@@ -19,22 +19,22 @@ class ListTickets extends ListRecords
     {
         return [
             Action::make('syncGithub')
-                ->label(__('Sync with GitHub'))
+                ->label(__('two-way-ticket::two-way-ticket.actions.sync_with_github'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->action(function (): void {
                     try {
                         $result = resolve(SyncGithubIssues::class)->handle();
                     } catch (\Throwable $throwable) {
-                        Notification::make()->danger()->title(__('Sync failed'))->body($throwable->getMessage())->send();
+                        Notification::make()->danger()->title(__('two-way-ticket::two-way-ticket.actions.sync_failed'))->body($throwable->getMessage())->send();
 
                         return;
                     }
 
                     Notification::make()
                         ->success()
-                        ->title(__('Synced'))
-                        ->body(__(':updated updated, :imported imported from GitHub.', $result))
+                        ->title(__('two-way-ticket::two-way-ticket.actions.synced'))
+                        ->body(__('two-way-ticket::two-way-ticket.actions.sync_result', $result))
                         ->send();
                 }),
             CreateAction::make(),

@@ -19,14 +19,15 @@ class ReportIssueForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('title')->required()->maxLength(255)->columnSpanFull(),
-            Textarea::make('description')->autosize()->columnSpanFull(),
+            TextInput::make('title')->label(__('two-way-ticket::two-way-ticket.field.title'))->required()->maxLength(255)->columnSpanFull(),
+            Textarea::make('description')->label(__('two-way-ticket::two-way-ticket.field.description'))->autosize()->columnSpanFull(),
             Repeater::make('steps')
+                ->label(__('two-way-ticket::two-way-ticket.field.steps'))
                 ->simple(TextInput::make('step')->required())
                 ->columnSpanFull()
-                ->addActionLabel(__('two-way-ticket::two-way-ticket.report_issue.add_step')),
+                ->addActionLabel(__('two-way-ticket::two-way-ticket.field.add_step')),
             FileUpload::make('screenshot_paths')
-                ->label(__('two-way-ticket::two-way-ticket.report_issue.screenshots'))
+                ->label(__('two-way-ticket::two-way-ticket.field.screenshots'))
                 ->image()
                 ->multiple()
                 ->disk(fn () => config()->string('two-way-ticket.screenshots.disk', 'public'))

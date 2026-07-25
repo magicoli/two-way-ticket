@@ -39,7 +39,40 @@ return [
         'title' => 'Report an issue',
         'submit' => 'Submit',
         'submitted' => 'Thanks — your report was submitted.',
-        'add_step' => 'Add step',
+    ],
+
+    'field' => [
+        'title' => 'Title',
+        'description' => 'Description',
+        'steps' => 'Steps to reproduce',
+        'status' => 'Status',
+        'priority' => 'Priority',
+        'labels' => 'Labels',
+        'milestone' => 'Milestone',
+        'page_url' => 'Page',
+        'app_version' => 'App version',
+        'role' => 'Role',
+        'reported_by' => 'Reported by',
+        'reported_at' => 'Reported at',
+        'resolved_at' => 'Resolved at',
+        'github_issue' => 'GitHub issue',
+        'github' => 'GitHub',
         'screenshots' => 'Screenshots',
+        'details' => 'Details',
+        'add_step' => 'Add step',
+    ],
+
+    'table' => [
+        'empty' => 'No tickets',
+    ],
+
+    'actions' => [
+        'sync_with_github' => 'Sync with GitHub',
+        'synced' => 'Synced',
+        'sync_failed' => 'Sync failed',
+        'sync_result' => ':updated updated, :imported imported from GitHub.',
+        'push_to_github' => 'Push to GitHub',
+        'pushed_to_github' => 'Pushed to GitHub',
+        'could_not_push' => 'Could not push to GitHub',
     ],
 ];
