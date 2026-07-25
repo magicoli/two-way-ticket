@@ -47,7 +47,7 @@ return [
         'steps' => 'Étapes pour reproduire',
         'status' => 'Statut',
         'priority' => 'Priorité',
-        'labels' => 'Labels',
+        'labels' => 'Étiquettes',
         'milestone' => 'Jalon',
         'page_url' => 'Page',
         'app_version' => 'Version de l\'app',
