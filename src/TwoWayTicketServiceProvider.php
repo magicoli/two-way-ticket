@@ -15,4 +15,14 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
             ->hasMigration('create_tickets_table')
             ->hasRoute('api');
     }
+
+    /**
+     * Not `->hasTranslations()`: Spatie's package tools expects `resources/lang`, but this
+     * package's translations live at plain `lang/` (matching cerealkiller97/filament-bug-reports'
+     * own convention) — load them explicitly instead.
+     */
+    public function packageBooted(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'two-way-ticket');
+    }
 }

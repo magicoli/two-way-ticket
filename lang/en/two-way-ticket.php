@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 return [
+    'ticket' => [
+        'label' => 'Ticket',
+        'plural' => 'Tickets',
+    ],
+
     'priority' => [
         'low' => 'Low',
         'medium' => 'Medium',

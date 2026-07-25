@@ -49,3 +49,11 @@ it('submits a report with only the minimal reporter-facing fields', function ():
     expect($ticket->priority)->toBeNull();
     expect($ticket->user_id)->toBe($user->id);
 });
+
+it('actually resolves translations, not just raw keys', function (): void {
+    // Regression (Oli, 2026-07-25): the service provider never registered the "two-way-ticket"
+    // translation namespace at all, so every __('two-way-ticket::...') call rendered as the raw,
+    // untranslated key string on screen.
+    expect(__('two-way-ticket::two-way-ticket.report_issue.title'))->toBe('Report an issue');
+    expect(__('two-way-ticket::two-way-ticket.ticket.plural'))->toBe('Tickets');
+});
