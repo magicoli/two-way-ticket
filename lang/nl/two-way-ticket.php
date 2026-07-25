@@ -67,12 +67,12 @@ return [
     ],
 
     'filter' => [
-        'status' => 'Alle statussen',
-        'priority' => 'Alle prioriteiten',
-        'labels' => 'Alle labels',
-        'milestone' => 'Alle mijlpalen',
-        'app_version' => 'Alle versies',
-        'user' => 'Alle melders',
+        'status' => 'Status',
+        'priority' => 'Prioriteit',
+        'labels' => 'Label',
+        'milestone' => 'Mijlpaal',
+        'app_version' => 'Versie',
+        'user' => 'Gebruiker',
     ],
 
     'actions' => [

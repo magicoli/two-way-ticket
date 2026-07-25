@@ -67,12 +67,12 @@ return [
     ],
 
     'filter' => [
-        'status' => 'All statuses',
-        'priority' => 'All priorities',
-        'labels' => 'All labels',
-        'milestone' => 'All milestones',
-        'app_version' => 'All versions',
-        'user' => 'All reporters',
+        'status' => 'Status',
+        'priority' => 'Priority',
+        'labels' => 'Label',
+        'milestone' => 'Milestone',
+        'app_version' => 'Version',
+        'user' => 'User',
     ],
 
     'actions' => [
