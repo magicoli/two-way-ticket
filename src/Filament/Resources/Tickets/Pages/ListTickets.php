@@ -9,6 +9,7 @@ use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
 use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
@@ -17,6 +18,12 @@ use Magicoli\TwoWayTicket\Filament\Resources\Tickets\TicketResource;
 class ListTickets extends ListRecords
 {
     protected static string $resource = TicketResource::class;
+
+    /**
+     * Full width: this table carries a dozen columns and a filter row, and the panel's default
+     * max-width left a wide empty margin on either side on desktop.
+     */
+    protected Width|string|null $maxContentWidth = Width::Full;
 
     /**
      * @return array<string, Tab>

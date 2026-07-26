@@ -49,13 +49,16 @@ class TicketsTable
                     ->badge()
                     ->sortable()
                     ->wrap()
-                    ->state(fn (Ticket $record): array => array_values(array_filter([
+                    ->state(fn(Ticket $record): array => array_values(array_filter([
                         $record->status->value,
                         $record->state_reason,
                     ])))
-                    ->formatStateUsing(fn (string $state): ?string => TicketStatus::tryFrom($state)?->getLabel()
-                        ?? TicketStateReason::labelFor($state))
-                    ->color(fn (string $state): string => TicketStatus::tryFrom($state)?->getColor() ?? 'gray'),
+                    ->formatStateUsing(
+                        fn(string $state): ?string => (
+                            TicketStatus::tryFrom($state)?->getLabel() ?? TicketStateReason::labelFor($state)
+                        ),
+                    )
+                    ->color(fn(string $state): string => TicketStatus::tryFrom($state)?->getColor() ?? 'gray'),
                 // Gray on purpose: a coloured badge here would highlight labels without actually
                 // distinguishing them. Colouring them properly means mirroring each label's own
                 // GitHub colour — a lot of work for little gain, so: neutral.
@@ -83,7 +86,7 @@ class TicketsTable
                     ->sortable()
                     ->wrap()
                     ->grow()
-                    ->state(fn (Ticket $record): array => array_values(array_filter([
+                    ->state(fn(Ticket $record): array => array_values(array_filter([
                         $record->title,
                         filled($record->page_url)
                             ? (parse_url($record->page_url, PHP_URL_PATH) ?: $record->page_url)
@@ -95,25 +98,8 @@ class TicketsTable
                     // Deliberately NOT a link: giving the path its own URL turns the cell into a
                     // link and kills the row click, and being able to click anywhere on the row
                     // to open the ticket matters more than reaching the page from here.
-                    ->color(fn (string $state, Ticket $record): string => $state === $record->title
-                        ? ''
-                        : 'gray')
-                    ->weight(fn (string $state, Ticket $record): ?string => $state === $record->title
-                        ? 'medium'
-                        : null),
-                TextColumn::make('assignees')
-                    ->verticalAlignment(VerticalAlignment::Start)
-                    ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
-                    ->badge()
-                    ->separator(',')
-                    ->sortable()
-                    ->toggleable(),
-                TextColumn::make('milestone')
-                    ->verticalAlignment(VerticalAlignment::Start)
-                    ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->sortable()
-                    ->searchable(),
+                    ->color(fn(string $state, Ticket $record): string => $state === $record->title ? '' : 'gray')
+                    ->weight(fn(string $state, Ticket $record): ?string => $state === $record->title ? 'medium' : null),
                 TextColumn::make('projects')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.projects'))
@@ -121,6 +107,12 @@ class TicketsTable
                     ->separator(',')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('milestone')
+                    ->verticalAlignment(VerticalAlignment::Start)
+                    ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('app_version')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
@@ -136,6 +128,13 @@ class TicketsTable
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.reported_at'))
                     ->isoDateTime()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('assignees')
+                    ->verticalAlignment(VerticalAlignment::Start)
+                    ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
+                    ->badge()
+                    ->separator(',')
                     ->sortable()
                     ->toggleable(),
             ])
@@ -282,12 +281,12 @@ class TicketsTable
     private static function openGithubAction(): Action
     {
         return Action::make('openGithub')
-            ->label(fn (Ticket $record): string => '#'.$record->github_issue_number)
+            ->label(fn(Ticket $record): string => '#' . $record->github_issue_number)
             ->badge()
             ->color('gray')
-            ->url(fn (Ticket $record): ?string => $record->github_issue_url)
+            ->url(fn(Ticket $record): ?string => $record->github_issue_url)
             ->openUrlInNewTab()
-            ->visible(fn (Ticket $record): bool => $record->isLinked());
+            ->visible(fn(Ticket $record): bool => $record->isLinked());
     }
 
     /**
@@ -312,7 +311,7 @@ class TicketsTable
                 ->icon(self::githubIcon())
                 ->color('gray')
                 ->requiresConfirmation()
-                ->action(fn (Collection $records) => self::runOverRecords($records, $push))
+                ->action(fn(Collection $records) => self::runOverRecords($records, $push))
                 ->deselectRecordsAfterCompletion();
         }
 
@@ -321,8 +320,8 @@ class TicketsTable
             ->icon(self::githubIcon())
             ->color('gray')
             ->requiresConfirmation()
-            ->visible(fn (Ticket $record): bool => ! $record->isLinked())
-            ->action(fn (Ticket $record) => self::runOverRecords(collect([$record]), $push));
+            ->visible(fn(Ticket $record): bool => !$record->isLinked())
+            ->action(fn(Ticket $record) => self::runOverRecords(collect([$record]), $push));
     }
 
     /**
@@ -340,12 +339,12 @@ class TicketsTable
                 ->required(),
             Select::make('labels')
                 ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                ->options(fn (): array => Ticket::labelOptions())
+                ->options(fn(): array => Ticket::labelOptions())
                 ->multiple()
                 ->native(false),
         ];
 
-        $close = fn (array $data): callable => function (Ticket $record) use ($data): bool {
+        $close = fn(array $data): callable => function (Ticket $record) use ($data): bool {
             if ($record->status === TicketStatus::Closed) {
                 return false;
             }
@@ -367,7 +366,7 @@ class TicketsTable
                 ->icon(Heroicon::OutlinedCheckCircle)
                 ->color('gray')
                 ->schema($schema)
-                ->action(fn (Collection $records, array $data) => self::runOverRecords($records, $close($data)))
+                ->action(fn(Collection $records, array $data) => self::runOverRecords($records, $close($data)))
                 ->deselectRecordsAfterCompletion();
         }
 
@@ -376,8 +375,8 @@ class TicketsTable
             ->icon(Heroicon::OutlinedCheckCircle)
             ->color('gray')
             ->schema($schema)
-            ->visible(fn (Ticket $record): bool => $record->status !== TicketStatus::Closed)
-            ->action(fn (Ticket $record, array $data) => self::runOverRecords(collect([$record]), $close($data)));
+            ->visible(fn(Ticket $record): bool => $record->status !== TicketStatus::Closed)
+            ->action(fn(Ticket $record, array $data) => self::runOverRecords(collect([$record]), $close($data)));
     }
 
     /**
@@ -399,7 +398,7 @@ class TicketsTable
                     $done++;
                 }
             } catch (\Throwable $throwable) {
-                $failures[] = '#'.$record->getKey().': '.$throwable->getMessage();
+                $failures[] = '#' . $record->getKey() . ': ' . $throwable->getMessage();
             }
         }
 
