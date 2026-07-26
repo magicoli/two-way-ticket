@@ -80,6 +80,8 @@ return [
     ],
 
     'actions' => [
+        'assign' => 'Toewijzen',
+        'replace_existing' => 'Bestaande waarden vervangen',
         'close' => 'Sluiten',
         'done' => ':count ticket(s) bijgewerkt.',
         'sync_with_github' => 'Synchroniseren met GitHub',

@@ -144,3 +144,34 @@ it('filters by labels and assignees, both ANDed with the active tab', function (
         ->assertCanSeeTableRecords([$match])
         ->assertCanNotSeeTableRecords([$wrongAssignee, $closedMatch]);
 });
+
+it('bulk-assigns labels by adding to what is already there, leaving other fields alone', function (): void {
+    // Oli, 2026-07-26: bulk labels/projects/milestone. Adding rather than replacing is what makes
+    // it usable for sweeping a backlog — and an omitted field must not wipe that attribute.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $a = Ticket::factory()->create(['title' => 'A', 'labels' => ['bug'], 'milestone' => 'v1.0']);
+    $b = Ticket::factory()->create(['title' => 'B', 'labels' => []]);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->selectTableRecords([$a->getKey(), $b->getKey()])
+        ->callAction(TestAction::make('assign')->table()->bulk(), ['labels' => ['enhancement']]);
+
+    expect($a->fresh())->labels->toBe(['bug', 'enhancement'])->milestone->toBe('v1.0');
+    expect($b->fresh())->labels->toBe(['enhancement']);
+});
+
+it('replaces instead of adding when asked to', function (): void {
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $ticket = Ticket::factory()->create(['labels' => ['bug', 'wontfix']]);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->selectTableRecords([$ticket->getKey()])
+        ->callAction(TestAction::make('assign')->table()->bulk(), [
+            'labels' => ['question'],
+            'replace' => true,
+        ]);
+
+    expect($ticket->fresh())->labels->toBe(['question']);
+});

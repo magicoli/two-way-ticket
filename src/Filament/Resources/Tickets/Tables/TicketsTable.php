@@ -12,6 +12,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Icons\Heroicon;
@@ -22,6 +23,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Magicoli\TwoWayTicket\Actions\AssignTicketAttributes;
 use Magicoli\TwoWayTicket\Actions\CloseTicket;
 use Magicoli\TwoWayTicket\Actions\CreateGithubIssue;
 use Magicoli\TwoWayTicket\Enums\TicketStateReason;
@@ -266,11 +268,55 @@ class TicketsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    self::assignAction(),
                     self::pushToGithubAction(bulk: true),
                     self::closeAction(bulk: true),
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Bulk-assign labels, projects and milestone. Every field is optional and an empty one leaves
+     * that attribute untouched — otherwise tagging fifty tickets would wipe the milestone of all
+     * fifty. Multi-value fields ADD to what's there unless "replace" is ticked, which is what
+     * makes this usable for sweeping a backlog into labels a handful at a time.
+     */
+    private static function assignAction(): BulkAction
+    {
+        return BulkAction::make('assign')
+            ->label(__('two-way-ticket::two-way-ticket.actions.assign'))
+            ->icon(Heroicon::OutlinedTag)
+            ->color('gray')
+            ->schema([
+                Select::make('labels')
+                    ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                    ->options(fn (): array => Ticket::labelOptions())
+                    ->multiple()
+                    ->native(false),
+                Select::make('projects')
+                    ->label(__('two-way-ticket::two-way-ticket.field.projects'))
+                    ->options(fn (): array => Ticket::distinctValues('projects'))
+                    ->multiple()
+                    ->native(false),
+                Select::make('milestone')
+                    ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
+                    ->options(fn (): array => Ticket::distinctValues('milestone'))
+                    ->native(false),
+                Toggle::make('replace')
+                    ->label(__('two-way-ticket::two-way-ticket.actions.replace_existing')),
+            ])
+            ->action(fn (Collection $records, array $data) => self::runOverRecords(
+                $records,
+                fn (Ticket $record): bool => resolve(AssignTicketAttributes::class)->handle(
+                    $record,
+                    filled($data['labels'] ?? null) ? $data['labels'] : null,
+                    filled($data['projects'] ?? null) ? $data['projects'] : null,
+                    filled($data['milestone'] ?? null) ? $data['milestone'] : null,
+                    (bool) ($data['replace'] ?? false),
+                ),
+            ))
+            ->deselectRecordsAfterCompletion();
     }
 
     /**

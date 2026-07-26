@@ -80,6 +80,8 @@ return [
     ],
 
     'actions' => [
+        'assign' => 'Assign',
+        'replace_existing' => 'Replace existing values',
         'close' => 'Close',
         'done' => ':count ticket(s) updated.',
         'sync_with_github' => 'Sync with GitHub',
