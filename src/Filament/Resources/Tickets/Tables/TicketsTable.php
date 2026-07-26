@@ -89,10 +89,12 @@ class TicketsTable
                             ? (parse_url($record->page_url, PHP_URL_PATH) ?: $record->page_url)
                             : null,
                     ])))
-                    // Path shown, full URL linked — same trade-off as the view header.
-                    ->url(fn (string $state, Ticket $record): ?string => $state === $record->title
-                        ? null
-                        : $record->page_url)
+                    // One per line — the default joins array values with ", ", which read as a
+                    // stray comma between the title and the path.
+                    ->listWithLineBreaks()
+                    // Deliberately NOT a link: giving the path its own URL turns the cell into a
+                    // link and kills the row click, and being able to click anywhere on the row
+                    // to open the ticket matters more than reaching the page from here.
                     ->color(fn (string $state, Ticket $record): string => $state === $record->title
                         ? ''
                         : 'gray')

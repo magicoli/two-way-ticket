@@ -38,7 +38,7 @@ it('shows the page path under the title, without costing the table its headers',
     // rather than on the label text, which also appears in the column-toggle menu (a first
     // attempt at this test passed while the header row was in fact gone).
     $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
-    Ticket::factory()->create([
+    $ticket = Ticket::factory()->create([
         'title' => 'Something broke',
         'page_url' => 'https://private.internal.test/admin/tickets?tab=closed',
     ]);
@@ -47,9 +47,12 @@ it('shows the page path under the title, without costing the table its headers',
 
     expect($html)
         ->toContain('/admin/tickets')
-        // The full URL stays clickable even though only the path is shown.
-        ->toContain('https://private.internal.test/admin/tickets?tab=closed')
-        ->toContain('fi-ta-header-cell');
+        ->toContain('fi-ta-header-cell')
+        // Clicking anywhere on the row still opens the ticket: the path is plain text, because
+        // giving it its own URL turns the cell into a link and kills the row click.
+        ->toContain('/tickets/'.$ticket->id)
+        // One value per line, not joined with a stray ", ".
+        ->not->toContain('Something broke, /admin/tickets');
 });
 
 it('shows status and reason as two separate badges in one column', function (): void {
