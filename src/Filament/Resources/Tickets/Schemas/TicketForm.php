@@ -15,6 +15,8 @@ use Magicoli\TwoWayTicket\Models\Ticket;
 /**
  * Same read-only header as the view page ({@see TicketHeader}), then the editable fields.
  *
+ * Inline labels, applied at schema level so it stays the default for anything added later.
+ *
  * assignees/labels/projects/milestone are NOT free tag inputs: they're picked from fixed lists.
  * Until each gets its own controlled way to add an option (a label through its own procedure, an
  * assignee limited to local users allowed to manage tickets AND carrying a linked GitHub
@@ -29,6 +31,7 @@ class TicketForm
     {
         return $schema
             ->columns(3)
+            ->inlineLabel()
             ->components([
                 TicketHeader::make(),
                 Group::make([
