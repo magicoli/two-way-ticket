@@ -35,22 +35,31 @@ class TicketsTable
             ->defaultSort('created_at', 'desc')
             ->emptyStateHeading(__('two-way-ticket::two-way-ticket.table.empty'))
             ->columns([
-                // Status and reason read as one thing ("Closed · Duplicate"), so they share one
-                // wrappable column instead of eating two. Sorted by status, the meaningful part.
+                // One column, still TWO badges: status (the important one, coloured) and its
+                // reason (secondary, gray), wrapping so the reason drops underneath when the
+                // column is tight rather than widening it. Width is the scarce resource here.
+                //
+                // An array state is what makes Filament render one badge per value; the raw
+                // enum values double as the discriminator, since no status value can collide
+                // with a reason one.
                 TextColumn::make('status')
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
                     ->badge()
                     ->sortable()
                     ->wrap()
-                    ->formatStateUsing(fn (TicketStatus $state, Ticket $record): string => collect([
-                        $state->getLabel(),
-                        TicketStateReason::labelFor($record->state_reason),
-                    ])->filter()->implode(' · ')),
+                    ->state(fn (Ticket $record): array => array_values(array_filter([
+                        $record->status->value,
+                        $record->state_reason,
+                    ])))
+                    ->formatStateUsing(fn (string $state): ?string => TicketStatus::tryFrom($state)?->getLabel()
+                        ?? TicketStateReason::labelFor($state))
+                    ->color(fn (string $state): string => TicketStatus::tryFrom($state)?->getColor() ?? 'gray'),
                 TextColumn::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->badge()
                     ->separator(',')
                     ->sortable()
+                    ->wrap()
                     ->toggleable(),
                 // Wraps onto extra lines instead of a fixed truncation — SPEC.md §4 wanted "plus
                 // de place pour le sujet" but an unwrapped title overflowed every other column.

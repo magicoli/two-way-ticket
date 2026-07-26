@@ -31,6 +31,20 @@ it('hides closed tickets by default, showing them via the Closed/All tabs', func
         ->assertCanSeeTableRecords([$open, $closed]);
 });
 
+it('shows status and reason as two separate badges in one column', function (): void {
+    // Oli, 2026-07-26: two badges, not one merged label — status is the important one, the
+    // reason is secondary and wraps underneath when the column is tight.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $ticket = Ticket::factory()->closed()->create(['state_reason' => 'duplicate']);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->set('activeTab', 'closed')
+        ->assertTableColumnStateSet('status', ['closed', 'duplicate'], $ticket)
+        ->assertSee('Closed')
+        ->assertSee('Duplicate');
+});
+
 it('closes a ticket from the list, asking for a reason the way GitHub does', function (): void {
     $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
     $ticket = Ticket::factory()->create(['title' => 'Still open', 'labels' => ['bug']]);
