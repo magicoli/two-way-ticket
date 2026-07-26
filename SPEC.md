@@ -96,6 +96,12 @@ PLUSIEURS repos. Cas d'usage réel : un bug signalé depuis word-up concerne en 
 bon Project GitHub (et donc, indirectement, router vers le bon repo cible), pas forcément rester
 lié au repo configuré par défaut pour l'app hôte.
 
+**Beaucoup plus tard (Oli, 2026-07-26) : viser le REPO directement, pas le Project.** Se servir
+des Projects pour séparer un bug de l'app d'un bug d'une de ses librairies détourne le concept et
+oblige à créer un Project par sous-module. Le vrai besoin est de choisir le repo cible au moment
+de pousser l'issue — ce qui permettrait au passage d'ouvrir une issue sur un repo tiers, pas
+seulement les siens.
+
 ## 8. Sync GitHub — vraiment bidirectionnel, avec webhook
 
 État actuel (à corriger) : `SyncBugReportGithubIssues` ne fait que RAFRAÎCHIR le statut des

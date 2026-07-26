@@ -64,6 +64,7 @@ return [
     ],
 
     'filter' => [
+        'assigned' => 'Assigné',
         'status' => 'Statut',
         'labels' => 'Etiquette',
         'assignees' => 'Assigné',
@@ -71,6 +72,13 @@ return [
         'milestone' => 'Jalon',
         'app_version' => 'Version',
         'user' => 'Utilisateur',
+    ],
+
+    'stats' => [
+        'open' => 'Ouverts',
+        'bug' => 'Bugs',
+        'in_progress' => 'En cours',
+        'closed' => 'Clôturés',
     ],
 
     'tab' => [

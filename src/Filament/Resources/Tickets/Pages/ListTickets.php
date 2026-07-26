@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\TicketResource;
+use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStats;
 
 class ListTickets extends ListRecords
 {
@@ -24,6 +25,14 @@ class ListTickets extends ListRecords
      * max-width left a wide empty margin on either side on desktop.
      */
     protected Width|string|null $maxContentWidth = Width::Full;
+
+    /**
+     * @return list<class-string>
+     */
+    protected function getHeaderWidgets(): array
+    {
+        return [TicketStats::class];
+    }
 
     /**
      * @return array<string, Tab>

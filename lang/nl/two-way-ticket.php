@@ -64,6 +64,7 @@ return [
     ],
 
     'filter' => [
+        'assigned' => 'Toegewezen',
         'status' => 'Status',
         'labels' => 'Label',
         'assignees' => 'Toegewezene',
@@ -71,6 +72,13 @@ return [
         'milestone' => 'Mijlpaal',
         'app_version' => 'Versie',
         'user' => 'Gebruiker',
+    ],
+
+    'stats' => [
+        'open' => 'Open',
+        'bug' => 'Bugs',
+        'in_progress' => 'In behandeling',
+        'closed' => 'Gesloten',
     ],
 
     'tab' => [

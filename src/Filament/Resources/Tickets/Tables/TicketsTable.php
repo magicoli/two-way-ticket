@@ -228,6 +228,11 @@ class TicketsTable
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.user'))
                         ->native(false)
                         ->relationship('user', 'name'),
+                    // "Has someone on it", regardless of who — what the In progress stat links to.
+                    // The assignees filter above answers a different question (WHICH assignee).
+                    Filter::make('assigned')
+                        ->label(__('two-way-ticket::two-way-ticket.filter.assigned'))
+                        ->query(fn (Builder $query): Builder => $query->whereJsonLength('assignees', '>', 0)),
                     Filter::make('assignees')
                         ->label(__('two-way-ticket::two-way-ticket.filter.assignees'))
                         ->schema([
