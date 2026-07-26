@@ -63,15 +63,15 @@ class TicketsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('page_url')
                     ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
-                    ->url(fn (Ticket $record): ?string => $record->page_url)
+                    ->url(fn(Ticket $record): ?string => $record->page_url)
                     ->limit(30)
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('github_issue_number')
                     ->label(__('two-way-ticket::two-way-ticket.field.github'))
-                    ->formatStateUsing(fn (?int $state): ?string => $state === null ? null : '#'.$state)
-                    ->url(fn (Ticket $record): ?string => $record->github_issue_url)
+                    ->formatStateUsing(fn(?int $state): ?string => $state === null ? null : '#' . $state)
+                    ->url(fn(Ticket $record): ?string => $record->github_issue_url)
                     ->openUrlInNewTab()
                     ->badge()
                     ->sortable()
@@ -95,9 +95,11 @@ class TicketsTable
                 [
                     // Open/Closed/All lives in the page's tabs (see ListTickets::getTabs()) as a
                     // general condition ANDed with these filters, not a replacement for this one
-                    // — still useful on its own since GitHub's state has exactly these two
-                    // values. Custom Filter+Select (not SelectFilter) so wrapOptionLabels(false)
-                    // keeps a multi-selection on one line.
+                    // — still useful on its own since GitHub's state has exactly these two values.
+                    // A ticket can only have ONE status, so whereIn (SelectFilter's default query)
+                    // would be enough — but SelectFilter can't do wrapOptionLabels(), which the
+                    // other multi-value filters below need, so this stays a raw Filter+Select too
+                    // for consistency between all the multi-value ones.
                     Filter::make('status')
                         ->label(__('two-way-ticket::two-way-ticket.filter.status'))
                         ->schema([
@@ -106,34 +108,70 @@ class TicketsTable
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.status'))
                                 ->native(false)
                                 ->options(TicketStatus::class)
-                                ->multiple()
-                                ->wrapOptionLabels(false),
+                                ->multiple(),
                         ])
-                        ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        ->query(fn(Builder $query, array $data): Builder => $query->when(
                             filled($data['values'] ?? null),
-                            fn (Builder $query): Builder => $query->whereIn('status', $data['values']),
+                            fn(Builder $query): Builder => $query->whereIn('status', $data['values']),
                         )),
-                    self::jsonColumnFilter('labels', fn (): array => self::distinctJsonOptions('labels', config()->array('two-way-ticket.github.default_labels', []))),
-                    self::jsonColumnFilter('assignees', fn (): array => self::distinctJsonOptions('assignees')),
-                    self::jsonColumnFilter('projects', fn (): array => self::distinctJsonOptions('projects')),
+                    // labels/assignees/projects: a ticket can carry SEVERAL values at once, stored
+                    // as a JSON array — SelectFilter's own whereIn() can't express "this array
+                    // contains any of the selected values", so each needs its own whereJsonContains
+                    // query, same shape as `status` above.
+                    Filter::make('labels')
+                        ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
+                        ->schema([
+                            Select::make('values')
+                                ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
+                                ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
+                                ->native(false)
+                                ->options(fn(): array => self::distinctValues('labels'))
+                                ->multiple(),
+                        ])
+                        ->query(fn(Builder $query, array $data): Builder => $query->when(
+                            filled($data['values'] ?? null),
+                            fn(Builder $query): Builder => $query->where(function (Builder $query) use ($data): void {
+                                foreach ($data['values'] as $label) {
+                                    $query->orWhereJsonContains('labels', $label);
+                                }
+                            }),
+                        )),
                     SelectFilter::make('milestone')
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.milestone'))
                         ->native(false)
                         ->options(
-                            fn (): array => Ticket::query()
+                            fn(): array => Ticket::query()
                                 ->whereNotNull('milestone')
                                 ->distinct()
                                 ->orderBy('milestone')
                                 ->pluck('milestone', 'milestone')
                                 ->all(),
                         ),
+                    Filter::make('projects')
+                        ->label(__('two-way-ticket::two-way-ticket.filter.projects'))
+                        ->schema([
+                            Select::make('values')
+                                ->label(__('two-way-ticket::two-way-ticket.filter.projects'))
+                                ->placeholder(__('two-way-ticket::two-way-ticket.filter.projects'))
+                                ->native(false)
+                                ->options(fn(): array => self::distinctValues('projects'))
+                                ->multiple(),
+                        ])
+                        ->query(fn(Builder $query, array $data): Builder => $query->when(
+                            filled($data['values'] ?? null),
+                            fn(Builder $query): Builder => $query->where(function (Builder $query) use ($data): void {
+                                foreach ($data['values'] as $project) {
+                                    $query->orWhereJsonContains('projects', $project);
+                                }
+                            }),
+                        )),
                     SelectFilter::make('app_version')
                         ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.app_version'))
                         ->native(false)
                         ->options(
-                            fn (): array => Ticket::query()
+                            fn(): array => Ticket::query()
                                 ->whereNotNull('app_version')
                                 ->where('app_version', '!=', '')
                                 ->distinct()
@@ -146,13 +184,31 @@ class TicketsTable
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.user'))
                         ->native(false)
                         ->relationship('user', 'name'),
+                    Filter::make('assignees')
+                        ->label(__('two-way-ticket::two-way-ticket.filter.assignees'))
+                        ->schema([
+                            Select::make('values')
+                                ->label(__('two-way-ticket::two-way-ticket.filter.assignees'))
+                                ->placeholder(__('two-way-ticket::two-way-ticket.filter.assignees'))
+                                ->native(false)
+                                ->options(fn(): array => self::distinctValues('assignees'))
+                                ->multiple(),
+                        ])
+                        ->query(fn(Builder $query, array $data): Builder => $query->when(
+                            filled($data['values'] ?? null),
+                            fn(Builder $query): Builder => $query->where(function (Builder $query) use ($data): void {
+                                foreach ($data['values'] as $assignee) {
+                                    $query->orWhereJsonContains('assignees', $assignee);
+                                }
+                            }),
+                        )),
                 ],
                 layout: FiltersLayout::AboveContent,
             )
             ->filtersFormColumns([
-                'sm' => 2,
-                'lg' => 3,
-                'xl' => 6,
+                'xs' => 2,
+                'sm' => 4,
+                'xl' => 7,
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -161,7 +217,7 @@ class TicketsTable
                     ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
                     ->icon('heroicon-o-arrow-up-tray')
                     ->color('gray')
-                    ->visible(fn (Ticket $record): bool => ! $record->isLinked())
+                    ->visible(fn(Ticket $record): bool => !$record->isLinked())
                     ->action(function (Ticket $record): void {
                         try {
                             resolve(CreateGithubIssue::class)->handle($record);
@@ -184,46 +240,21 @@ class TicketsTable
     }
 
     /**
-     * A JSON-array column (labels/assignees/projects) filtered by "carries ANY of the selected
-     * values" — same shape for all three, factored out to avoid repeating the query closure.
-     */
-    private static function jsonColumnFilter(string $column, \Closure $options): Filter
-    {
-        return Filter::make($column)
-            ->label(__('two-way-ticket::two-way-ticket.filter.'.$column))
-            ->schema([
-                Select::make('values')
-                    ->label(__('two-way-ticket::two-way-ticket.filter.'.$column))
-                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.'.$column))
-                    ->native(false)
-                    ->options($options)
-                    ->multiple()
-                    ->wrapOptionLabels(false),
-            ])
-            ->query(fn (Builder $query, array $data): Builder => $query->when(
-                filled($data['values'] ?? null),
-                fn (Builder $query): Builder => $query->where(function (Builder $query) use ($column, $data): void {
-                    foreach ($data['values'] as $value) {
-                        $query->orWhereJsonContains($column, $value);
-                    }
-                }),
-            ));
-    }
-
-    /**
-     * @param  list<string>  $seed
+     * Every distinct value actually present in a multi-value column (labels/assignees/projects)
+     * across all tickets — filter options only ever show what's really in the table; fixed/seed
+     * values (e.g. GitHub's default label catalogue) belong in the create/edit form, not here.
+     *
      * @return array<string, string>
      */
-    private static function distinctJsonOptions(string $column, array $seed = []): array
+    private static function distinctValues(string $column): array
     {
         return Ticket::query()
             ->whereNotNull($column)
             ->pluck($column)
-            ->flatMap(fn (array $values): array => $values)
-            ->concat($seed)
+            ->flatMap(fn(array $values): array => $values)
             ->unique()
             ->sort()
-            ->mapWithKeys(fn (string $value): array => [$value => $value])
+            ->mapWithKeys(fn(string $value): array => [$value => $value])
             ->all();
     }
 }

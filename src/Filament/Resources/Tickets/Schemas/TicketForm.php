@@ -30,7 +30,10 @@ class TicketForm
                         ->addActionLabel(__('two-way-ticket::two-way-ticket.field.add_step')),
                     Select::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->options(TicketStatus::class)->native(false)->required(),
                     TextInput::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
-                    TagsInput::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->columnSpanFull(),
+                    TagsInput::make('labels')
+                        ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                        ->suggestions(fn (): array => config()->array('two-way-ticket.github.default_labels', []))
+                        ->columnSpanFull(),
                     TagsInput::make('assignees')->label(__('two-way-ticket::two-way-ticket.field.assignees'))->columnSpanFull(),
                     TagsInput::make('projects')->label(__('two-way-ticket::two-way-ticket.field.projects'))->columnSpanFull(),
                 ])
