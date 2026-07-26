@@ -47,7 +47,9 @@ class ReportIssue extends Page
         $from = request()->string('from')->toString();
         $this->reportedFromUrl = $from !== '' ? $from : null;
 
-        $this->form->fill();
+        // Pre-filled as an ordinary editable field rather than captured silently: the reporter
+        // can correct it, or clear it when the report isn't about this page at all.
+        $this->form->fill(['page_url' => $this->reportedFromUrl]);
     }
 
     public function form(Schema $schema): Schema
@@ -102,7 +104,9 @@ class ReportIssue extends Page
             ...$data,
             'status' => TicketStatus::Open,
             'app_version' => Ticket::reportingAppVersion(),
-            'page_url' => $this->reportedFromUrl,
+            // page_url comes from the form now, so a cleared field really means "not about a
+            // specific page" instead of being silently overwritten with the referring URL.
+            'page_url' => filled($data['page_url'] ?? null) ? $data['page_url'] : null,
             'user_id' => Filament::auth()->id(),
         ]);
 

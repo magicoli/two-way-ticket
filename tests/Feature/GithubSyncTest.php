@@ -169,6 +169,43 @@ it('keeps state_reason as a verbatim mirror, never turned into a guessed status'
         ->state_reason->toBe('not_planned');
 });
 
+it('syncs GitHub Projects, which only exist in the GraphQL API', function (): void {
+    // The REST issue payload has no `projects` key at all — Projects (v2) are GraphQL-only.
+    $ticket = Ticket::factory()->linked(20)->create();
+
+    Http::fake([
+        'api.github.com/graphql' => Http::response(['data' => ['repository' => ['issues' => [
+            'pageInfo' => ['hasNextPage' => false, 'endCursor' => null],
+            'nodes' => [[
+                'number' => 20,
+                'projectItems' => ['nodes' => [['project' => ['title' => 'Roadmap']]]],
+            ]],
+        ]]]]),
+        'api.github.com/repos/example/example/issues/20' => Http::response(['number' => 20, 'state' => 'open']),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    resolve(SyncGithubIssues::class)->handle();
+
+    expect($ticket->fresh())->projects->toBe(['Roadmap']);
+});
+
+it('leaves stored projects alone when the token cannot read them, instead of wiping them', function (): void {
+    // A token without `read:project` gets a 200 carrying an `errors` array. Treating that as
+    // "no projects" would silently clear every ticket's — unknown is not the same as empty.
+    $ticket = Ticket::factory()->linked(21)->create(['projects' => ['Roadmap']]);
+
+    Http::fake([
+        'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]]),
+        'api.github.com/repos/example/example/issues/21' => Http::response(['number' => 21, 'state' => 'open']),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    resolve(SyncGithubIssues::class)->handle();
+
+    expect($ticket->fresh())->projects->toBe(['Roadmap']);
+});
+
 it('does not re-import an issue that already has a local ticket', function (): void {
     Ticket::factory()->linked(99)->create();
 

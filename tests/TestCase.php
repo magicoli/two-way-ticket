@@ -83,10 +83,11 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
-        (include __DIR__.'/../database/migrations/create_tickets_table.php.stub')->up();
-        (include __DIR__.'/../database/migrations/add_github_state_reason_to_tickets_table.php.stub')->up();
-        (include __DIR__.'/../database/migrations/align_tickets_with_github_model.php.stub')->up();
-        (include __DIR__.'/../database/migrations/drop_steps_from_tickets_table.php.stub')->up();
-        (include __DIR__.'/../database/migrations/rename_github_state_reason_to_state_reason.php.stub')->up();
+        // Every stub, in filename order — which is exactly what the timestamp prefixes are for.
+        // Globbing rather than listing them keeps this from silently missing a new migration,
+        // and a wrongly ordered prefix fails the whole suite instead of going unnoticed.
+        foreach (glob(__DIR__.'/../database/migrations/*.php.stub') ?: [] as $migration) {
+            (include $migration)->up();
+        }
     }
 }

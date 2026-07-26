@@ -37,13 +37,91 @@ final class SyncGithubIssues
 
         throw_if($repository === '' || $token === '', RuntimeException::class, (string) __('two-way-ticket::two-way-ticket.issue.not_configured'));
 
-        $updated = $this->updateLinkedTickets($repository, $token);
-        $imported = $this->importUntrackedIssues($repository, $token);
+        $projects = $this->fetchProjectsByIssue($repository, $token);
+
+        $updated = $this->updateLinkedTickets($repository, $token, $projects);
+        $imported = $this->importUntrackedIssues($repository, $token, $projects);
 
         return ['updated' => $updated, 'imported' => $imported];
     }
 
-    private function updateLinkedTickets(string $repository, string $token): int
+    /**
+     * GitHub Projects (v2) exist ONLY in the GraphQL API — the REST issue payload has no
+     * `projects` key at all — and reading them needs a token carrying the `read:project` scope on
+     * top of `repo`. Fetched for the whole repo in one paginated query rather than per issue.
+     *
+     * Returns null when projects can't be read (scope missing, GraphQL error, network failure).
+     * That's deliberately distinct from an empty array: null means "unknown, leave whatever is
+     * stored alone", so a token without the scope degrades to ignoring projects instead of
+     * silently wiping every ticket's.
+     *
+     * @return array<int, list<string>>|null
+     */
+    private function fetchProjectsByIssue(string $repository, string $token): ?array
+    {
+        [$owner, $name] = array_pad(explode('/', $repository, 2), 2, '');
+
+        if ($owner === '' || $name === '') {
+            return null;
+        }
+
+        $query = <<<'GRAPHQL'
+            query ($owner: String!, $name: String!, $after: String) {
+                repository(owner: $owner, name: $name) {
+                    issues(first: 100, after: $after, states: [OPEN, CLOSED]) {
+                        pageInfo { hasNextPage endCursor }
+                        nodes {
+                            number
+                            projectItems(first: 20) { nodes { project { title } } }
+                        }
+                    }
+                }
+            }
+            GRAPHQL;
+
+        $projects = [];
+        $after = null;
+
+        do {
+            try {
+                $response = Http::withToken($token)
+                    ->acceptJson()
+                    ->post('https://api.github.com/graphql', [
+                        'query' => $query,
+                        'variables' => ['owner' => $owner, 'name' => $name, 'after' => $after],
+                    ]);
+            } catch (Throwable) {
+                return null;
+            }
+
+            // GraphQL answers 200 with an `errors` array — INSUFFICIENT_SCOPES lands here.
+            if ($response->failed() || filled($response->json('errors'))) {
+                return null;
+            }
+
+            $issues = $response->json('data.repository.issues');
+
+            if (! is_array($issues)) {
+                return null;
+            }
+
+            foreach ($issues['nodes'] ?? [] as $issue) {
+                $projects[(int) $issue['number']] = self::names(
+                    array_column($issue['projectItems']['nodes'] ?? [], 'project'),
+                    'title',
+                );
+            }
+
+            $after = $issues['pageInfo']['endCursor'] ?? null;
+        } while (($issues['pageInfo']['hasNextPage'] ?? false) && $after !== null);
+
+        return $projects;
+    }
+
+    /**
+     * @param  array<int, list<string>>|null  $projects
+     */
+    private function updateLinkedTickets(string $repository, string $token, ?array $projects): int
     {
         $tickets = Ticket::query()->whereNotNull('github_issue_number')->get();
         $updated = 0;
@@ -61,7 +139,7 @@ final class SyncGithubIssues
 
             $response->throw();
 
-            if ($this->applyIssueState($ticket, $response->json())) {
+            if ($this->applyIssueState($ticket, $response->json(), projects: $projects)) {
                 $updated++;
             }
         }
@@ -69,7 +147,10 @@ final class SyncGithubIssues
         return $updated;
     }
 
-    private function importUntrackedIssues(string $repository, string $token): int
+    /**
+     * @param  array<int, list<string>>|null  $projects
+     */
+    private function importUntrackedIssues(string $repository, string $token, ?array $projects): int
     {
         $knownNumbers = Ticket::query()->whereNotNull('github_issue_number')->pluck('github_issue_number')->all();
         $imported = 0;
@@ -99,7 +180,7 @@ final class SyncGithubIssues
                     continue;
                 }
 
-                $this->importIssue($issue);
+                $this->importIssue($issue, $projects);
                 $imported++;
             }
 
@@ -111,8 +192,9 @@ final class SyncGithubIssues
 
     /**
      * @param  array<string, mixed>  $issue
+     * @param  array<int, list<string>>|null  $projects
      */
-    private function importIssue(array $issue): void
+    private function importIssue(array $issue, ?array $projects): void
     {
         $ticket = new Ticket([
             'title' => (string) $issue['title'],
@@ -125,28 +207,34 @@ final class SyncGithubIssues
             'github_issue_number' => (int) $issue['number'],
         ]);
 
-        $this->applyIssueState($ticket, $issue, save: false);
+        $this->applyIssueState($ticket, $issue, save: false, projects: $projects);
 
         $ticket->save();
     }
 
     /**
      * @param  array<string, mixed>  $issue
+     * @param  array<int, list<string>>|null  $projects
      */
-    private function applyIssueState(Ticket $ticket, array $issue, bool $save = true): bool
+    private function applyIssueState(Ticket $ticket, array $issue, bool $save = true, ?array $projects = null): bool
     {
         // Oli, 2026-07-26: "on s'aligne à 100% sur le système de GitHub" — a straight mirror of
-        // issue.state/state_reason/closed_at/assignees, nothing derived or guessed.
+        // issue.state/state_reason/closed_at/assignees/projects, nothing derived or guessed.
         $newStatus = $issue['state'] === 'closed' ? TicketStatus::Closed : TicketStatus::Open;
         $closedAt = $newStatus === TicketStatus::Closed
             ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now'))
             : null;
         $stateReason = $issue['state_reason'] ?? null;
         $assignees = self::names($issue['assignees'] ?? [], 'login');
+        // null means projects couldn't be read at all — keep whatever is stored rather than wipe it.
+        $newProjects = $projects === null
+            ? $ticket->projects
+            : ($projects[(int) $issue['number']] ?? []);
 
         $unchanged = $ticket->status === $newStatus
             && $ticket->state_reason === $stateReason
             && $ticket->assignees === $assignees
+            && $ticket->projects === $newProjects
             && (($ticket->closed_at === null && $closedAt === null)
                 || ($ticket->closed_at !== null && $closedAt !== null && $ticket->closed_at->equalTo($closedAt)));
 
@@ -158,6 +246,7 @@ final class SyncGithubIssues
         $ticket->closed_at = $closedAt;
         $ticket->state_reason = $stateReason;
         $ticket->assignees = $assignees;
+        $ticket->projects = $newProjects;
 
         if ($save) {
             $ticket->save();

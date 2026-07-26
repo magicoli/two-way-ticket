@@ -49,6 +49,29 @@ it('submits a report with only the minimal reporter-facing fields', function ():
     expect($ticket->user_id)->toBe($user->id);
 });
 
+it('lets the reporter clear the pre-filled page and pick labels', function (): void {
+    // Oli, 2026-07-26: the page URL is pre-filled but editable "si le problème est générique et
+    // pas lié spécifiquement à la page depuis laquelle on a cliqué".
+    $user = User::create(['name' => 'Reporter', 'email' => 'reporter@example.test']);
+
+    Livewire::actingAs($user)
+        ->withQueryParams(['from' => 'https://example.test/app/quick-publish'])
+        ->test(ReportIssue::class)
+        ->assertFormSet(['page_url' => 'https://example.test/app/quick-publish'])
+        ->fillForm([
+            'title' => 'General remark',
+            'page_url' => null,
+            'labels' => ['question'],
+        ])
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    $ticket = Ticket::query()->where('title', 'General remark')->first();
+
+    expect($ticket->page_url)->toBeNull();
+    expect($ticket->labels)->toBe(['question']);
+});
+
 it('actually resolves translations, not just raw keys', function (): void {
     // Regression (Oli, 2026-07-25): the service provider never registered the "two-way-ticket"
     // translation namespace at all, so every __('two-way-ticket::...') call rendered as the raw,

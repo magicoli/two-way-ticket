@@ -92,6 +92,26 @@ class Ticket extends Model
     }
 
     /**
+     * The label catalogue offered when filing: GitHub's standard set (config `default_labels`)
+     * merged with whatever is already in use here, so a brand-new install still offers real
+     * choices and a label added later never disappears from the list.
+     *
+     * @return array<string, string>
+     */
+    public static function labelOptions(): array
+    {
+        /** @var list<string> $defaults */
+        $defaults = config()->array('two-way-ticket.github.default_labels', []);
+
+        return collect($defaults)
+            ->merge(array_keys(static::distinctValues('labels')))
+            ->unique()
+            ->sort()
+            ->mapWithKeys(fn (string $label): array => [$label => $label])
+            ->all();
+    }
+
+    /**
      * The build to stamp on a ticket reported FROM this app. Falls back to the host app's own
      * `app.version` when the package isn't configured with one — the behaviour config/two-way-ticket.php
      * always documented but never actually implemented, which is why the field came out empty.
