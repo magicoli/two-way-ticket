@@ -13,7 +13,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
@@ -67,13 +69,26 @@ class TicketsTable
                     ->toggleable(),
                 // Wraps onto extra lines instead of a fixed truncation — SPEC.md §4 wanted "plus
                 // de place pour le sujet" but an unwrapped title overflowed every other column.
-                TextColumn::make('title')
-                    ->label(__('two-way-ticket::two-way-ticket.field.title'))
-                    ->searchable()
-                    ->weight('medium')
-                    ->sortable()
-                    ->wrap()
-                    ->grow(),
+                // The page sits UNDER the title rather than in its own column: as a column it ate
+                // width for what is, most of the time, a secondary detail.
+                Stack::make([
+                    TextColumn::make('title')
+                        ->label(__('two-way-ticket::two-way-ticket.field.title'))
+                        ->searchable()
+                        ->weight('medium')
+                        ->sortable()
+                        ->wrap(),
+                    TextColumn::make('page_url')
+                        ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
+                        ->url(fn (Ticket $record): ?string => $record->page_url)
+                        // Path shown, full URL linked — same trade-off as the header.
+                        ->formatStateUsing(fn (?string $state): ?string => filled($state)
+                            ? (parse_url($state, PHP_URL_PATH) ?: $state)
+                            : null)
+                        ->color('gray')
+                        ->size(TextSize::Small)
+                        ->searchable(),
+                ])->grow(),
                 TextColumn::make('assignees')
                     ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
                     ->badge()
@@ -91,13 +106,6 @@ class TicketsTable
                     ->separator(',')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('page_url')
-                    ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
-                    ->url(fn(Ticket $record): ?string => $record->page_url)
-                    ->limit(30)
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
                 TextColumn::make('github_issue_number')
                     ->label(__('two-way-ticket::two-way-ticket.field.github'))
                     ->formatStateUsing(fn(?int $state): ?string => $state === null ? null : '#' . $state)

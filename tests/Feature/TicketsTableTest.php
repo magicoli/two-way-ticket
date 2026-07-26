@@ -31,6 +31,22 @@ it('hides closed tickets by default, showing them via the Closed/All tabs', func
         ->assertCanSeeTableRecords([$open, $closed]);
 });
 
+it('shows the page path under the title, without costing a column', function (): void {
+    // Oli, 2026-07-26: as its own column the URL ate width for a secondary detail. Stacked under
+    // the title instead — and stacking must not cost the other columns their sortable headers.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    Ticket::factory()->create([
+        'title' => 'Something broke',
+        'page_url' => 'https://private.internal.test/admin/tickets?tab=closed',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->assertSee('/admin/tickets')
+        ->assertSee('Title')
+        ->assertSee('Milestone');
+});
+
 it('shows status and reason as two separate badges in one column', function (): void {
     // Oli, 2026-07-26: two badges, not one merged label — status is the important one, the
     // reason is secondary and wraps underneath when the column is tight.
