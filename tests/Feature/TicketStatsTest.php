@@ -71,13 +71,13 @@ it('highlights the active stat and greys the rest', function (): void {
         ->and($colours([])[0])->toBe('success');
 });
 
-it('returns to the default view when the active stat is clicked again', function (): void {
-    // Back to Open, not to "everything": Oli, 2026-07-26, "Open [...] affiche tout au lieu de
-    // seulement les tickets ouverts" — Open is the default, so clicking it can only ever mean
-    // "show me the open ones", never toggle itself off.
-    expect(statUrls(['view' => 'in_progress'])[2])->toContain('view=open')
-        ->and(statUrls(['view' => 'closed'])[3])->toContain('view=open')
-        ->and(statUrls([])[0])->toContain('view=open');
+it('widens to everything when the active stat is clicked again, Open included', function (): void {
+    // Oli, 2026-07-26: "Open est l'affichage par défaut, mais uniquement quand on arrive sur la
+    // page. On doit pouvoir le désactiver aussi (pour tout afficher justement)."
+    expect(statUrls(['view' => 'in_progress'])[2])->toContain('view=all')
+        ->and(statUrls(['view' => 'closed'])[3])->toContain('view=all')
+        // On arrival, Open is the active one, so it offers the way out.
+        ->and(statUrls([])[0])->toContain('view=all');
 });
 
 it('renders inside the page request, or the highlight can never move', function (): void {
@@ -87,11 +87,15 @@ it('renders inside the page request, or the highlight can never move', function 
 });
 
 it('marks the active stat with more than a colour', function (): void {
-    // Colour alone can't carry Closed — its own colour IS gray.
-    $descriptions = fn (array $query) => array_map(fn ($stat) => $stat->getDescription(), statsFor($query));
+    // Colour alone can't carry Closed — its own colour IS gray — and the small caption wasn't
+    // enough either, so the card itself gets a class the host app tints (see README).
+    $classes = fn (array $query) => array_map(
+        fn ($stat) => $stat->getExtraAttributes()['class'] ?? '',
+        statsFor($query),
+    );
 
-    expect($descriptions(['view' => 'closed'])[3])->not->toBeNull()
-        ->and($descriptions(['view' => 'closed'])[0])->toBeNull();
+    expect($classes(['view' => 'closed'])[3])->toBe('twt-stat-active')
+        ->and($classes(['view' => 'closed'])[0])->toBe('');
 });
 
 it('is registered above the list', function (): void {

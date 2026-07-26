@@ -93,15 +93,14 @@ class TicketStats extends StatsOverviewWidget
         return Stat::make($label, $value)
             ->icon($icon)
             ->color($isActive ? $color : 'gray')
-            // Colour alone was too quiet to read at a glance, and it can't carry the "Closed"
-            // stat at all — its own colour IS gray. The check makes the selection unmistakable.
-            ->description($isActive ? __('two-way-ticket::two-way-ticket.stats.showing') : null)
+            // Filament hardcodes the stat card's background, so no built-in class can tint it.
+            // The package marks the active one and the host app styles that class — see the
+            // README. The check icon is the fallback that works with no styling at all.
+            ->extraAttributes($isActive ? ['class' => 'twt-stat-active'] : [])
             ->descriptionIcon($isActive ? Heroicon::OutlinedCheckCircle : null)
-            // Clicking the one you're already on goes back to the default view rather than to
-            // "everything" — Open is that default, so it always simply means "show me the open
-            // ones" instead of toggling itself off.
-            ->url(TicketResource::getUrl('index', $isActive && $target !== ['view' => 'open']
-                ? ['view' => 'open']
-                : $target));
+            ->description($isActive ? __('two-way-ticket::two-way-ticket.stats.showing') : null)
+            // Every stat toggles, Open included: it's the default view on ARRIVAL, not a state
+            // you're stuck in, so clicking the active one always widens to everything.
+            ->url(TicketResource::getUrl('index', $isActive ? ['view' => 'all'] : $target));
     }
 }

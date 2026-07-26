@@ -64,6 +64,18 @@ Deploy keys are **not** an option here: they authenticate git transport (clone/p
 give no access to the issues API at all. Same for SSH keys in general — the REST and GraphQL APIs
 only accept tokens.
 
+## Styling the selected stat
+
+The stats above the ticket list are clickable filters, and the selected one carries the class
+`twt-stat-active`. Filament hardcodes a stat card's background, so no built-in class can tint it —
+add a rule to your own Filament theme if you want more than the check icon:
+
+```css
+.twt-stat-active {
+    @apply bg-primary-50 ring-primary-600/20 dark:bg-primary-950 dark:ring-primary-400/20;
+}
+```
+
 ## License
 
 AGPL-3.0-or-later — see [LICENSE](LICENSE).
