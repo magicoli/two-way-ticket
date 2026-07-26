@@ -35,7 +35,7 @@ class TicketStats extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $open = fn () => Ticket::query()->where('status', TicketStatus::Open->value);
+        $open = fn() => Ticket::query()->where('status', TicketStatus::Open->value);
         $view = request()->query('view', 'open');
         /** @var array<string, mixed> $filters */
         $filters = (array) request()->query('filters', []);
@@ -47,7 +47,7 @@ class TicketStats extends StatsOverviewWidget
                 $open()->count(),
                 TicketStatus::Open->getIcon(),
                 TicketStatus::Open->getColor(),
-                isActive: $view === 'open' && ! $onBugs,
+                isActive: $view === 'open' && !$onBugs,
                 target: ['view' => 'open'],
             ),
             $this->stat(
@@ -81,19 +81,17 @@ class TicketStats extends StatsOverviewWidget
     /**
      * @param  array<string, mixed>  $target
      */
-    private function stat(
-        string $label,
-        int $value,
-        string $icon,
-        string $color,
-        bool $isActive,
-        array $target,
-    ): Stat {
+    private function stat(string $label, int $value, string $icon, string $color, bool $isActive, array $target): Stat
+    {
         return Stat::make($label, $value)
             ->icon($icon)
             ->color($isActive ? $color : 'gray')
             // Filament hardcodes the stat card's background, so no built-in class can tint it:
             // the package marks the active card and the host app styles it (see the README).
+            // Tailwind utilities like `bg-primary-500` do nothing from here: nothing compiles
+            // them — they're absent from Filament's own CSS and a host theme only scans its own
+            // sources, never this package. Hence a real class, styled by the stylesheet the
+            // package ships (resources/css/two-way-ticket.css).
             ->extraAttributes($isActive ? ['class' => 'twt-stat-active'] : [])
             // Every stat toggles, Open included: it's the default view on ARRIVAL, not a state
             // you're stuck in, so clicking the active one always widens to everything.

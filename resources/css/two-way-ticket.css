@@ -1,0 +1,21 @@
+/*
+ * Shipped by the package and registered through Filament's asset system, so the ticket list
+ * looks right in any host app without asking it to add anything.
+ *
+ * Plain CSS on purpose: this file is served as-is, never run through Tailwind, so `@apply` and
+ * utility classes would do nothing here. It leans on Filament's own custom properties instead,
+ * which means it follows whatever primary colour and dark mode the host panel is using.
+ */
+
+/* The selected stat block above the ticket list. Filament hardcodes a stat card's background
+   (--color-white, --gray-900 in dark) with no colour variant, so marking the selection takes a
+   rule of our own — there is no built-in class that tints it. */
+.twt-stat-active {
+    background-color: var(--primary-100);
+    box-shadow: 0 0 0 2px var(--primary-500);
+}
+
+:is(.dark, .dark *) .twt-stat-active {
+    background-color: var(--primary-800);
+    box-shadow: 0 0 0 2px var(--primary-400);
+}

@@ -2,6 +2,8 @@
 
 namespace Magicoli\TwoWayTicket;
 
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -44,6 +46,14 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
         $this->publishes(
             [__DIR__.'/../lang' => lang_path('vendor/two-way-ticket')],
             'two-way-ticket-translations',
+        );
+
+        // The package's own stylesheet, served by Filament. These pages are generated here, so
+        // looking right is this package's job — a host app shouldn't have to add CSS for the
+        // selected stat to be visible.
+        FilamentAsset::register(
+            [Css::make('two-way-ticket', __DIR__.'/../resources/css/two-way-ticket.css')],
+            package: 'magicoli/two-way-ticket',
         );
     }
 }
