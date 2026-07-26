@@ -29,12 +29,9 @@ class TicketInfolist
                         ->label(__('two-way-ticket::two-way-ticket.field.description'))
                         ->markdown()
                         ->columnSpanFull(),
-                    Group::make([
-                        TextEntry::make('page_url')->label(__(
-                            'two-way-ticket::two-way-ticket.field.page_url',
-                        ))->url(fn(Ticket $record): ?string => $record->page_url),
-                        TextEntry::make('app_version')->label(__('two-way-ticket::two-way-ticket.field.app_version')),
-                    ])->inlineLabel(),
+                    // page_url and app_version live in the header now (badge + link, no labels):
+                    // they were showing twice, once here and once in the description's own
+                    // detail list, stacked one under the other.
                     RepeatableEntry::make('screenshot_paths')
                         ->label(__('two-way-ticket::two-way-ticket.field.screenshots'))
                         ->columnSpanFull()

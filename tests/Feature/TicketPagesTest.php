@@ -23,10 +23,19 @@ it('renders the view and edit pages for a fully populated ticket', function (): 
         'projects' => ['Roadmap'],
         'milestone' => 'v1.1',
         'state_reason' => 'completed',
+        'app_version' => '1.2.3',
+        'page_url' => 'https://example.test/admin/tickets?tab=closed',
         'user_id' => $user->id,
     ]);
 
-    Livewire::actingAs($user)->test(ViewTicket::class, ['record' => $ticket->id])->assertOk();
+    // Version and page live in the header now (badge + link), not as labelled fields in the
+    // body — the page shows its path, so the header keeps its width.
+    Livewire::actingAs($user)
+        ->test(ViewTicket::class, ['record' => $ticket->id])
+        ->assertOk()
+        ->assertSee('1.2.3')
+        ->assertSee('/admin/tickets');
+
     Livewire::actingAs($user)->test(EditTicket::class, ['record' => $ticket->id])->assertOk();
 });
 

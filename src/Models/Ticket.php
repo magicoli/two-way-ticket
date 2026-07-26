@@ -111,12 +111,14 @@ class Ticket extends Model
         $steps = collect($steps)->filter(fn (string $step): bool => trim($step) !== '')->values();
         $path = filled($pageUrl) ? parse_url($pageUrl, PHP_URL_PATH) : null;
 
+        // A markdown LIST, not consecutive lines: markdown collapses single newlines, so plain
+        // lines would render as one run-on paragraph wherever the description is displayed.
         $details = collect([
             filled($appVersion)
-                ? '**'.__('two-way-ticket::two-way-ticket.issue.app_version', [], 'en').':** '.$appVersion
+                ? '- **'.__('two-way-ticket::two-way-ticket.issue.app_version', [], 'en').':** '.$appVersion
                 : null,
             filled($path)
-                ? '**'.__('two-way-ticket::two-way-ticket.issue.page_url', [], 'en').':** `'.$path.'`'
+                ? '- **'.__('two-way-ticket::two-way-ticket.issue.page_url', [], 'en').':** `'.$path.'`'
                 : null,
         ])->filter();
 

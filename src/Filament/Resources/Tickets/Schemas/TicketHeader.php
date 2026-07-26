@@ -44,9 +44,25 @@ class TicketHeader
                 ->color('gray')
                 ->visible(fn (?Ticket $record): bool => filled($record?->state_reason))
                 ->grow(false),
+            TextEntry::make('app_version')
+                ->hiddenLabel()
+                ->badge()
+                ->color('gray')
+                ->visible(fn (?Ticket $record): bool => filled($record?->app_version))
+                ->grow(false),
             TextEntry::make('created_at')
                 ->hiddenLabel()
                 ->state(fn (?Ticket $record): string => $record instanceof Ticket ? self::summary($record) : '')
+                ->grow(false),
+            // Shows the path, links to the whole URL: the full address is long and mostly noise
+            // in a header line that's fighting for width, but it still has to be clickable.
+            TextEntry::make('page_url')
+                ->hiddenLabel()
+                ->url(fn (?Ticket $record): ?string => $record?->page_url)
+                ->formatStateUsing(fn (?string $state): ?string => filled($state)
+                    ? (parse_url($state, PHP_URL_PATH) ?: $state)
+                    : null)
+                ->visible(fn (?Ticket $record): bool => filled($record?->page_url))
                 ->grow(false),
             TextEntry::make('github_issue_url')
                 ->hiddenLabel()
