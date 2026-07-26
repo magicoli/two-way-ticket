@@ -13,7 +13,7 @@ it('exposes the ticket list on a panel with TicketsPlugin attached', function ()
 });
 
 it('does not expose any ticket list route at all on a panel with only ReportIssuePlugin', function (): void {
-    // The whole point of splitting the two plugins (SPEC.md §9): a panel that only reports
+    // The whole point of splitting the two plugins (DEVELOPERS.md §9): a panel that only reports
     // issues should never even HAVE a browsable resource route, tenant-scoped or not.
     $user = User::create(['name' => 'Regular', 'email' => 'regular@example.test']);
 

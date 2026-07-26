@@ -72,7 +72,7 @@ class TicketsTable
                     ->sortable()
                     ->wrap()
                     ->toggleable(),
-                // Title, wrapped rather than truncated (SPEC.md §4 wanted "plus de place pour le
+                // Title, wrapped rather than truncated (DEVELOPERS.md §4 wanted "plus de place pour le
                 // sujet"), with the page path UNDER it — as its own column the URL ate width for
                 // what is usually a secondary detail.
                 //

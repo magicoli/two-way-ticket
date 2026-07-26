@@ -119,7 +119,7 @@ it('mirrors a linked ticket status from its real GitHub issue state', function (
 });
 
 it('imports a GitHub issue that has no local ticket at all', function (): void {
-    // The defining feature (SPEC.md §8): an issue opened straight on GitHub, never through this
+    // The defining feature (DEVELOPERS.md §8): an issue opened straight on GitHub, never through this
     // app, still ends up here after a sync.
     Http::fake([
         'api.github.com/repos/example/example/issues*' => Http::response([

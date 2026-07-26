@@ -16,11 +16,11 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->json('steps')->nullable();
             $table->string('status')->default('open');
-            // Open labels (see SPEC.md §1) — a plain JSON array of strings, not a fixed enum. Not
-            // synced FROM GitHub read-side yet in V1 (see SPEC.md's open questions); pushed to
+            // Open labels (see DEVELOPERS.md §1) — a plain JSON array of strings, not a fixed enum. Not
+            // synced FROM GitHub read-side yet in V1 (see DEVELOPERS.md's open questions); pushed to
             // GitHub as-is when the ticket is created there.
             $table->json('labels')->nullable();
-            // A GitHub milestone TITLE (not a relation yet — see SPEC.md's open questions, deferred
+            // A GitHub milestone TITLE (not a relation yet — see DEVELOPERS.md's open questions, deferred
             // to V2 as a real synced model).
             $table->string('milestone')->nullable();
             $table->json('screenshot_paths')->nullable();

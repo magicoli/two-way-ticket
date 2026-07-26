@@ -13,7 +13,7 @@ use Magicoli\TwoWayTicket\Filament\Resources\Tickets\TicketResource;
  * should actually TRIAGE tickets (typically 'admin' only). Deliberately separate from
  * {@see ReportIssuePlugin}: attaching a Filament Resource to a tenant-scoped panel makes Filament
  * try to auto-scope it by tenant, which breaks for a genuinely global model (confirmed the hard
- * way in word-up, see SPEC.md's own note on #17/#23) — a panel that only needs the "report an
+ * way in word-up, see DEVELOPERS.md's own note on #17/#23) — a panel that only needs the "report an
  * issue" button should never need this plugin at all.
  */
 class TicketsPlugin implements Plugin

@@ -14,7 +14,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Genuinely bidirectional (see SPEC.md §8 — the one thing the previous package never did):
+ * Genuinely bidirectional (see DEVELOPERS.md §8 — the one thing the previous package never did):
  *
  * 1. Every ticket ALREADY linked to a GitHub issue gets its status mirrored from the issue's
  *    real open/closed state, same as before.

@@ -1,17 +1,40 @@
 # Two-Way Ticket
 
-*Helpdesk truckin' down the track* — a flexible ticketing system for Laravel / Filament, built
-around one idea: **align on GitHub's own model instead of reinventing it.** Labels, assignee,
-milestone, and Projects mirror GitHub directly — sync is genuinely bidirectional (an issue opened
-straight on GitHub shows up here too, not just the other way around).
+*Helpdesk truckin' down the track* — a ticketing system for Laravel / Filament that keeps every
+issue in one place: your own app.
 
-See [SPEC.md](SPEC.md) for the full design.
+Tickets are reported from inside your app, triaged there and closed there. Any one of them can be
+**promoted to a real GitHub issue** when that is where it belongs, and from that moment the two
+stay in sync **both ways**: edited on GitHub, it updates here; edited here, it updates there. An
+issue opened directly on GitHub, by someone who never touched your app, is pulled in too.
 
-## Status
+Promoting is a deliberate, per-ticket choice, and that is the whole point. A client's support
+request, a note to yourself, "can you make the button bigger" — none of that belongs on a public
+issue tracker, and none of it has to go there. What is genuinely a development issue gets promoted
+and picks up everything GitHub offers; the rest simply stays home. One backlog either way, so
+nothing lives in two systems at once.
 
-V1 in progress: model, Filament resource, GitHub push + bidirectional sync (labels, assignees,
-milestone, Projects), and a token-protected JSON API are in place. Comments and the webhook are
-planned for V2 (see SPEC.md).
+Nothing is lost in translation when a ticket is promoted, because a ticket **is** a GitHub issue in
+every respect that matters: title, description, `open`/`closed` with GitHub's own `state_reason`,
+labels, assignees, milestone and Projects. No invented priorities or extra workflow states to map
+onto something GitHub doesn't have.
+
+GitHub is entirely optional. Leave it unconfigured and this is a self-contained tracker that never
+talks to anyone.
+
+See [DEVELOPERS.md](DEVELOPERS.md) for the full design.
+
+## What you get
+
+- A Filament resource to browse, filter and triage tickets, with bulk push / close / labelling.
+- A **"Report an issue"** button you can attach to any panel, separately from the admin-only list —
+  reporters never need access to the backlog they report into.
+- A token-protected JSON API (`/api/tickets`), so scripts and coding agents can file and update
+  tickets without a browser.
+- Translations in English, French and Dutch, overridable per app.
+
+Not there yet: **comments** on a ticket, and a **GitHub webhook** to make incoming sync immediate
+instead of on-demand. Both are planned — see [DEVELOPERS.md](DEVELOPERS.md) §6 and §8.
 
 ## Installation
 
@@ -38,6 +61,9 @@ TWO_WAY_TICKET_API_TOKEN=
 TWO_WAY_TICKET_GITHUB_TOKEN=
 TWO_WAY_TICKET_GITHUB_REPOSITORY=owner/repo
 ```
+
+Only the API token matters for a local-only tracker. Without the two GitHub values, everything
+works except pushing and syncing, which say so plainly rather than failing quietly.
 
 ## GitHub token
 

@@ -19,7 +19,7 @@ use Magicoli\TwoWayTicket\ReportIssuePlugin;
 
 /**
  * A regular, non-triaging panel: ONLY the report button, no browsable ticket list at all — this
- * is the whole point of splitting the two plugins (SPEC.md §9 / TicketsPlugin's own docblock):
+ * is the whole point of splitting the two plugins (DEVELOPERS.md §9 / TicketsPlugin's own docblock):
  * a panel like this one never gets TicketResource registered on it, so it can never hit the
  * tenant-scoping bug that broke word-up's project panel with the old, single-plugin package.
  */

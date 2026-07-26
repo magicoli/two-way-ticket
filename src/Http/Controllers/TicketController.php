@@ -34,7 +34,7 @@ class TicketController extends Controller
     public function store(StoreTicketRequest $request): JsonResponse
     {
         // Captured automatically — never accepted as free-form user input for what's meant to
-        // record where the ticket was actually filed from (SPEC.md §3).
+        // record where the ticket was actually filed from (DEVELOPERS.md §3).
         $pageUrl = $request->string('page_url')->toString() ?: $request->headers->get('referer');
         $appVersion = $request->string('app_version')->toString() ?: Ticket::reportingAppVersion();
 
