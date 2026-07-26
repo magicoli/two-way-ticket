@@ -196,10 +196,10 @@ final class SyncGithubIssues
      */
     private function importIssue(array $issue, ?array $projects): void
     {
-        // labels/milestone are deliberately absent here: applyIssueState owns every
-        // GitHub-mirrored field, for imports and updates alike, so there's one place to look.
+        // title/labels/milestone aren't listed here because applyIssueState() sets them, one line
+        // below, for imports and updates alike — it owns every GitHub-mirrored field so there's a
+        // single place to look. They ARE synced; they're just not set twice.
         $ticket = new Ticket([
-            'title' => (string) $issue['title'],
             'description' => (string) ($issue['body'] ?? ''),
             'app_version' => '',
             'role' => 'GitHub',
@@ -219,9 +219,17 @@ final class SyncGithubIssues
     private function applyIssueState(Ticket $ticket, array $issue, bool $save = true, ?array $projects = null): bool
     {
         // Oli, 2026-07-26: "on s'aligne à 100% sur le système de GitHub" — a straight mirror of
-        // issue.state/state_reason/closed_at/labels/milestone/assignees/projects, nothing derived
-        // or guessed. Mirroring means REPLACING, not merging: a label removed on GitHub has to
-        // disappear here too, which a merge would never do.
+        // issue.title/state/state_reason/closed_at/labels/milestone/assignees/projects, nothing
+        // derived or guessed. Mirroring means REPLACING, not merging: a label removed on GitHub
+        // has to disappear here too, which a merge would never do.
+        //
+        // Safe for the title because every local edit is pushed to GitHub as it's saved (see
+        // EditTicket::afterSave), so GitHub always holds the newest version — "celle qui a été
+        // modifiée en dernier". The one exception is a push that FAILED: the user gets a
+        // persistent error, but the next sync will restore GitHub's older title over their edit.
+        // Keeps the current title if the payload somehow carries none — mirroring must never
+        // blank a field just because a key was missing.
+        $title = (string) ($issue['title'] ?? $ticket->title ?? '');
         $newStatus = $issue['state'] === 'closed' ? TicketStatus::Closed : TicketStatus::Open;
         $closedAt = $newStatus === TicketStatus::Closed
             ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now'))
@@ -235,7 +243,8 @@ final class SyncGithubIssues
             ? $ticket->projects
             : ($projects[(int) $issue['number']] ?? []);
 
-        $unchanged = $ticket->status === $newStatus
+        $unchanged = $ticket->title === $title
+            && $ticket->status === $newStatus
             && $ticket->state_reason === $stateReason
             && $ticket->labels === $labels
             && $ticket->milestone === $milestone
@@ -248,6 +257,7 @@ final class SyncGithubIssues
             return false;
         }
 
+        $ticket->title = $title;
         $ticket->status = $newStatus;
         $ticket->closed_at = $closedAt;
         $ticket->state_reason = $stateReason;

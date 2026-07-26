@@ -169,6 +169,24 @@ it('keeps state_reason as a verbatim mirror, never turned into a guessed status'
         ->state_reason->toBe('not_planned');
 });
 
+it('mirrors a title renamed on GitHub', function (): void {
+    $ticket = Ticket::factory()->linked(31)->create(['title' => 'Old wording']);
+
+    Http::fake([
+        'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]]),
+        'api.github.com/repos/example/example/issues/31' => Http::response([
+            'number' => 31,
+            'state' => 'open',
+            'title' => 'Renamed on GitHub',
+        ]),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    resolve(SyncGithubIssues::class)->handle();
+
+    expect($ticket->fresh())->title->toBe('Renamed on GitHub');
+});
+
 it('removes locally a label that was removed on GitHub', function (): void {
     // Oli, 2026-07-26: labels deleted on the repo stayed here — the sync mirrored status and
     // assignees but never labels, so they only ever accumulated. Mirroring REPLACES.
