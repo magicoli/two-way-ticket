@@ -46,6 +46,7 @@ return [
         'reported_by' => 'Gemeld door',
         'reported_at' => 'Gemeld op',
         'closed_at' => 'Gesloten op',
+        'github_state_reason' => 'Reden van sluiting',
         'github_issue' => 'GitHub-issue',
         'github' => 'GitHub',
         'screenshots' => 'Schermafbeeldingen',

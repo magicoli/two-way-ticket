@@ -46,6 +46,7 @@ return [
         'reported_by' => 'Signalé par',
         'reported_at' => 'Signalé le',
         'closed_at' => 'Fermé le',
+        'github_state_reason' => 'Motif de fermeture',
         'github_issue' => 'Issue GitHub',
         'github' => 'GitHub',
         'screenshots' => 'Captures d\'écran',

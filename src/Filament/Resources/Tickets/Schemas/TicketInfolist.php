@@ -29,6 +29,7 @@ class TicketInfolist
                             TextEntry::make('step')->hiddenLabel(),
                         ]),
                     TextEntry::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->badge(),
+                    TextEntry::make('github_state_reason')->label(__('two-way-ticket::two-way-ticket.field.github_state_reason')),
                     TextEntry::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->badge(),
                     TextEntry::make('assignees')->label(__('two-way-ticket::two-way-ticket.field.assignees'))->badge(),
                     TextEntry::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
@@ -46,7 +47,7 @@ class TicketInfolist
                         ->label(__('two-way-ticket::two-way-ticket.field.github_issue'))
                         ->url(fn(Ticket $record): ?string => $record->github_issue_url)
                         ->openUrlInNewTab()
-                        ->formatStateUsing(fn(?int $state, Ticket $record): ?string => $record->github_issue_number
+                        ->formatStateUsing(fn(?string $state, Ticket $record): ?string => $record->github_issue_number
                             !== null
                                 ? '#' . $record->github_issue_number
                                 : null),

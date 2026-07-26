@@ -27,22 +27,27 @@ class TicketsTable
             ->defaultSort('created_at', 'desc')
             ->emptyStateHeading(__('two-way-ticket::two-way-ticket.table.empty'))
             ->columns([
-                // Wide, unwrapped title — SPEC.md §4: "plus de place pour le sujet".
                 TextColumn::make('status')
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
                     ->badge()
                     ->sortable(),
+                TextColumn::make('github_state_reason')
+                    ->label(__('two-way-ticket::two-way-ticket.field.github_state_reason'))
+                    ->toggleable(),
                 TextColumn::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->badge()
                     ->separator(',')
                     ->sortable()
                     ->toggleable(),
+                // Truncated with a tooltip for the full text — SPEC.md §4 wanted "plus de place
+                // pour le sujet" but an unbounded title was overflowing every other column.
                 TextColumn::make('title')
                     ->label(__('two-way-ticket::two-way-ticket.field.title'))
                     ->searchable()
                     ->weight('medium')
                     ->sortable()
+                    ->limit(60)
                     ->grow(),
                 TextColumn::make('assignees')
                     ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
