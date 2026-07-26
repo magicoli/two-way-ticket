@@ -10,7 +10,7 @@ return [
 
     'status' => [
         'open' => 'Ouvert',
-        'closed' => 'Fermé',
+        'closed' => 'Clôturé',
     ],
 
     'state_reason' => [
@@ -49,7 +49,7 @@ return [
         'role' => 'Rôle',
         'reported_by' => 'Signalé par',
         'reported_at' => 'Signalé le',
-        'closed_at' => 'Fermé le',
+        'closed_at' => 'Clôturé le',
         'state_reason' => 'Motif',
         'github_issue' => 'Issue GitHub',
         'github' => 'GitHub',
@@ -74,12 +74,12 @@ return [
 
     'tab' => [
         'open' => 'Ouverts',
-        'closed' => 'Fermés',
+        'closed' => 'Clôturés',
         'all' => 'Tous',
     ],
 
     'actions' => [
-        'close' => 'Fermer',
+        'close' => 'Clôturer',
         'done' => ':count ticket(s) mis à jour.',
         'sync_with_github' => 'Synchroniser avec GitHub',
         'synced' => 'Synchronisé',
