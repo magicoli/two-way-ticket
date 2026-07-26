@@ -76,7 +76,46 @@ it('imports a GitHub issue that has no local ticket at all', function (): void {
     expect($imported)->not->toBeNull();
     expect($imported->title)->toBe('Reported straight on GitHub');
     expect($imported->labels)->toBe(['bug', 'good first issue']);
-    expect($imported->status)->toBe(TicketStatus::Triaged);
+    expect($imported->status)->toBe(TicketStatus::New);
+});
+
+it('closes a linked ticket as Resolved regardless of why GitHub closed it', function (): void {
+    // Oli, 2026-07-26: "closed sur GitHub ne veut pas forcément dire Resolved [...] on s'aligne
+    // à 100% sur le système de GitHub" — Resolved means closed, full stop. The reason (wontfix,
+    // duplicate...) lives in github_state_reason and the labels, never guessed into a status.
+    $ticket = Ticket::factory()->linked(8)->create();
+
+    Http::fake([
+        'api.github.com/repos/example/example/issues/8' => Http::response([
+            'number' => 8,
+            'state' => 'closed',
+            'state_reason' => 'not_planned',
+            'closed_at' => '2026-07-25T10:00:00Z',
+        ]),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    resolve(SyncGithubIssues::class)->handle();
+
+    expect($ticket->fresh())
+        ->status->toBe(TicketStatus::Resolved)
+        ->github_state_reason->toBe('not_planned');
+});
+
+it('leaves local progress alone while an issue stays open, except moving a reopened ticket off Resolved', function (): void {
+    $inProgress = Ticket::factory()->linked(10)->create(['status' => 'in_progress']);
+    $wasResolved = Ticket::factory()->linked(11)->resolved()->create();
+
+    Http::fake([
+        'api.github.com/repos/example/example/issues/10' => Http::response(['number' => 10, 'state' => 'open']),
+        'api.github.com/repos/example/example/issues/11' => Http::response(['number' => 11, 'state' => 'open', 'state_reason' => 'reopened']),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    resolve(SyncGithubIssues::class)->handle();
+
+    expect($inProgress->fresh())->status->toBe(TicketStatus::InProgress);
+    expect($wasResolved->fresh())->status->toBe(TicketStatus::Triaged)->resolved_at->toBeNull();
 });
 
 it('does not re-import an issue that already has a local ticket', function (): void {

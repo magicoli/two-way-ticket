@@ -27,6 +27,7 @@ use Magicoli\TwoWayTicket\Enums\TicketStatus;
  * @property string $role
  * @property string|null $github_issue_url
  * @property int|null $github_issue_number
+ * @property string|null $github_state_reason
  * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property int|null $user_id
  */
@@ -52,6 +53,7 @@ class Ticket extends Model
         'role',
         'github_issue_url',
         'github_issue_number',
+        'github_state_reason',
         'resolved_at',
         'user_id',
     ];

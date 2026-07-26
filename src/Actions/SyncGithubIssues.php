@@ -135,15 +135,26 @@ final class SyncGithubIssues
      */
     private function applyIssueState(Ticket $ticket, array $issue, bool $save = true): bool
     {
-        $closedAt = $issue['state'] === 'closed'
-            ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now'))
-            : null;
+        $isClosed = $issue['state'] === 'closed';
+        $closedAt = $isClosed ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now')) : null;
 
-        $newStatus = $closedAt instanceof CarbonImmutable ? TicketStatus::Resolved : TicketStatus::Triaged;
+        // Aligned 100% on GitHub's own model: only open/closed drives the status. Closed is
+        // always Resolved regardless of why (completed, wontfix, duplicate...) — that reason is
+        // a label, never a second local status. Open never overwrites local progress, except a
+        // ticket that was Resolved and got reopened, which can't stay Resolved.
+        $newStatus = match (true) {
+            $isClosed => TicketStatus::Resolved,
+            ! $ticket->exists => TicketStatus::New,
+            $ticket->status === TicketStatus::Resolved => TicketStatus::Triaged,
+            default => $ticket->status,
+        };
+
+        $stateReason = $issue['state_reason'] ?? null;
 
         $unchanged = $ticket->status === $newStatus
-            && (($ticket->resolved_at === null && ! $closedAt instanceof CarbonImmutable)
-                || ($ticket->resolved_at !== null && $closedAt instanceof CarbonImmutable && $ticket->resolved_at->equalTo($closedAt)));
+            && $ticket->github_state_reason === $stateReason
+            && (($ticket->resolved_at === null && $closedAt === null)
+                || ($ticket->resolved_at !== null && $closedAt !== null && $ticket->resolved_at->equalTo($closedAt)));
 
         if ($unchanged) {
             return false;
@@ -151,6 +162,7 @@ final class SyncGithubIssues
 
         $ticket->status = $newStatus;
         $ticket->resolved_at = $closedAt;
+        $ticket->github_state_reason = $stateReason;
 
         if ($save) {
             $ticket->save();
