@@ -64,7 +64,6 @@ return [
     ],
 
     'filter' => [
-        'assigned' => 'Assigned',
         'status' => 'Status',
         'labels' => 'Label',
         'assignees' => 'Assignee',
@@ -82,6 +81,7 @@ return [
     ],
 
     'tab' => [
+        'in_progress' => 'In progress',
         'open' => 'Open',
         'closed' => 'Closed',
         'all' => 'All',

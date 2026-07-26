@@ -42,6 +42,14 @@ class ListTickets extends ListRecords
         return [
             'open' => Tab::make(__('two-way-ticket::two-way-ticket.tab.open'))
                 ->query(fn (Builder $query): Builder => $query->where('status', TicketStatus::Open->value)),
+            // A subset of open, not a state of its own: an assigned ticket that's been closed is
+            // finished, not in progress. GitHub has no in-progress state, so "someone is on it"
+            // is the honest stand-in — and a tab expresses it the same way Open/Closed do,
+            // without a filter standing in for what is really a general condition.
+            'in_progress' => Tab::make(__('two-way-ticket::two-way-ticket.tab.in_progress'))
+                ->query(fn (Builder $query): Builder => $query
+                    ->where('status', TicketStatus::Open->value)
+                    ->whereJsonLength('assignees', '>', 0)),
             'closed' => Tab::make(__('two-way-ticket::two-way-ticket.tab.closed'))
                 ->query(fn (Builder $query): Builder => $query->where('status', TicketStatus::Closed->value)),
             'all' => Tab::make(__('two-way-ticket::two-way-ticket.tab.all')),

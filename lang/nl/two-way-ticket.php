@@ -64,7 +64,6 @@ return [
     ],
 
     'filter' => [
-        'assigned' => 'Toegewezen',
         'status' => 'Status',
         'labels' => 'Label',
         'assignees' => 'Toegewezene',
@@ -82,6 +81,7 @@ return [
     ],
 
     'tab' => [
+        'in_progress' => 'In behandeling',
         'open' => 'Open',
         'closed' => 'Gesloten',
         'all' => 'Alle',

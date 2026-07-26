@@ -228,11 +228,6 @@ class TicketsTable
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.user'))
                         ->native(false)
                         ->relationship('user', 'name'),
-                    // "Has someone on it", regardless of who — what the In progress stat links to.
-                    // The assignees filter above answers a different question (WHICH assignee).
-                    Filter::make('assigned')
-                        ->label(__('two-way-ticket::two-way-ticket.filter.assigned'))
-                        ->query(fn (Builder $query): Builder => $query->whereJsonLength('assignees', '>', 0)),
                     Filter::make('assignees')
                         ->label(__('two-way-ticket::two-way-ticket.filter.assignees'))
                         ->schema([
@@ -296,31 +291,30 @@ class TicketsTable
             ->schema([
                 Select::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                    ->options(fn (): array => Ticket::labelOptions())
+                    ->options(fn(): array => Ticket::labelOptions())
                     ->multiple()
                     ->native(false),
                 Select::make('projects')
                     ->label(__('two-way-ticket::two-way-ticket.field.projects'))
-                    ->options(fn (): array => Ticket::distinctValues('projects'))
+                    ->options(fn(): array => Ticket::distinctValues('projects'))
                     ->multiple()
                     ->native(false),
                 Select::make('milestone')
                     ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
-                    ->options(fn (): array => Ticket::distinctValues('milestone'))
+                    ->options(fn(): array => Ticket::distinctValues('milestone'))
                     ->native(false),
-                Toggle::make('replace')
-                    ->label(__('two-way-ticket::two-way-ticket.actions.replace_existing')),
+                Toggle::make('replace')->label(__('two-way-ticket::two-way-ticket.actions.replace_existing')),
             ])
-            ->action(fn (Collection $records, array $data) => self::runOverRecords(
-                $records,
-                fn (Ticket $record): bool => resolve(AssignTicketAttributes::class)->handle(
-                    $record,
-                    filled($data['labels'] ?? null) ? $data['labels'] : null,
-                    filled($data['projects'] ?? null) ? $data['projects'] : null,
-                    filled($data['milestone'] ?? null) ? $data['milestone'] : null,
-                    (bool) ($data['replace'] ?? false),
-                ),
-            ))
+            ->action(fn(
+                Collection $records,
+                array $data,
+            ) => self::runOverRecords($records, fn(Ticket $record): bool => resolve(AssignTicketAttributes::class)->handle(
+                $record,
+                filled($data['labels'] ?? null) ? $data['labels'] : null,
+                filled($data['projects'] ?? null) ? $data['projects'] : null,
+                filled($data['milestone'] ?? null) ? $data['milestone'] : null,
+                (bool) ($data['replace'] ?? false),
+            )))
             ->deselectRecordsAfterCompletion();
     }
 
