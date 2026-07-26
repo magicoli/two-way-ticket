@@ -80,13 +80,6 @@ return [
         'closed' => 'Clôturés',
     ],
 
-    'tab' => [
-        'in_progress' => 'En cours',
-        'open' => 'Ouverts',
-        'closed' => 'Clôturés',
-        'all' => 'Tous',
-    ],
-
     'actions' => [
         'save' => 'Sauvegarder',
         'assign' => 'Assigner',

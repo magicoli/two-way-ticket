@@ -80,13 +80,6 @@ return [
         'closed' => 'Gesloten',
     ],
 
-    'tab' => [
-        'in_progress' => 'In behandeling',
-        'open' => 'Open',
-        'closed' => 'Gesloten',
-        'all' => 'Alle',
-    ],
-
     'actions' => [
         'save' => 'Opslaan',
         'assign' => 'Toewijzen',

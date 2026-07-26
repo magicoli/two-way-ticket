@@ -53,11 +53,11 @@ it('does not count a closed ticket as in progress just because someone was assig
 it('links each stat to a tab, the same mechanism the Open/Closed buttons already use', function (): void {
     // From a neutral tab, so none of them is active and each shows its real target rather than
     // the clear-selection link.
-    $urls = statUrls(['tab' => 'all']);
+    $urls = statUrls(['view' => 'all']);
 
-    expect($urls[0])->toContain('tab=open')
-        ->and($urls[2])->toContain('tab=in_progress')
-        ->and($urls[3])->toContain('tab=closed')
+    expect($urls[0])->toContain('view=open')
+        ->and($urls[2])->toContain('view=in_progress')
+        ->and($urls[3])->toContain('view=closed')
         // Only Bugs needs a filter: a label isn't a state, so there's no tab for it.
         ->and($urls[1])->toContain('filters%5Blabels%5D');
 });
@@ -66,14 +66,14 @@ it('highlights the active stat and greys the rest', function (): void {
     $colours = fn (array $query) => array_map(fn ($stat) => $stat->getColor(), statsFor($query));
 
     // Closed's own colour IS gray, so it's checked through in_progress, whose colour is distinct.
-    expect($colours(['tab' => 'in_progress']))->toBe(['gray', 'gray', 'warning', 'gray'])
+    expect($colours(['view' => 'in_progress']))->toBe(['gray', 'gray', 'warning', 'gray'])
         // Default view is the open tab, so Open is the one lit up.
         ->and($colours([])[0])->toBe('success');
 });
 
 it('clears the selection when the active stat is clicked again', function (): void {
-    expect(statUrls(['tab' => 'in_progress'])[2])->toContain('tab=all')
-        ->and(statUrls(['tab' => 'closed'])[3])->toContain('tab=all');
+    expect(statUrls(['view' => 'in_progress'])[2])->toContain('view=all')
+        ->and(statUrls(['view' => 'closed'])[3])->toContain('view=all');
 });
 
 it('is registered above the list', function (): void {

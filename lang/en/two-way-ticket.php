@@ -80,13 +80,6 @@ return [
         'closed' => 'Closed',
     ],
 
-    'tab' => [
-        'in_progress' => 'In progress',
-        'open' => 'Open',
-        'closed' => 'Closed',
-        'all' => 'All',
-    ],
-
     'actions' => [
         'save' => 'Save',
         'assign' => 'Assign',

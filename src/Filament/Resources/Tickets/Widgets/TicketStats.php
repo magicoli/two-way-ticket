@@ -13,9 +13,13 @@ use Magicoli\TwoWayTicket\Models\Ticket;
 /**
  * The four counts that drive triage, above the list.
  *
- * Every one is a LINK to the matching selection — a number you can't act on just makes you go and
- * rebuild the filter by hand. Three of them are plain tabs, the same mechanism the Open/Closed
- * buttons already use; only "Bugs" needs a filter, because a label isn't a state.
+ * These ARE the list's controls — there used to be a row of tabs saying the same thing, and two
+ * rows of controls for one choice is one too many.
+ *
+ * Every one is a LINK to the matching selection: a number you can't act on just makes you go and
+ * rebuild the filter by hand. Three of them scope the whole list (see
+ * ListTickets::getTableQuery); only "Bugs" goes through a table filter, because a label is not
+ * a state.
  *
  * The active one is coloured and the others go gray, so the colour says WHICH selection you're
  * looking at rather than merely decorating. Clicking the active one clears back to everything.
@@ -25,7 +29,7 @@ class TicketStats extends StatsOverviewWidget
     protected function getStats(): array
     {
         $open = fn () => Ticket::query()->where('status', TicketStatus::Open->value);
-        $tab = request()->query('tab', 'open');
+        $view = request()->query('view', 'open');
         /** @var array<string, mixed> $filters */
         $filters = (array) request()->query('filters', []);
         $onBugs = in_array('bug', (array) data_get($filters, 'labels.values', []), true);
@@ -36,8 +40,8 @@ class TicketStats extends StatsOverviewWidget
                 $open()->count(),
                 TicketStatus::Open->getIcon(),
                 TicketStatus::Open->getColor(),
-                isActive: $tab === 'open' && ! $onBugs,
-                target: ['tab' => 'open'],
+                isActive: $view === 'open' && ! $onBugs,
+                target: ['view' => 'open'],
             ),
             $this->stat(
                 __('two-way-ticket::two-way-ticket.stats.bug'),
@@ -45,7 +49,7 @@ class TicketStats extends StatsOverviewWidget
                 'heroicon-o-bug-ant',
                 'danger',
                 isActive: $onBugs,
-                target: ['tab' => 'open', 'filters' => ['labels' => ['values' => ['bug']]]],
+                target: ['view' => 'open', 'filters' => ['labels' => ['values' => ['bug']]]],
             ),
             $this->stat(
                 __('two-way-ticket::two-way-ticket.stats.in_progress'),
@@ -53,16 +57,16 @@ class TicketStats extends StatsOverviewWidget
                 $open()->whereJsonLength('assignees', '>', 0)->count(),
                 'heroicon-o-play',
                 'warning',
-                isActive: $tab === 'in_progress',
-                target: ['tab' => 'in_progress'],
+                isActive: $view === 'in_progress',
+                target: ['view' => 'in_progress'],
             ),
             $this->stat(
                 __('two-way-ticket::two-way-ticket.stats.closed'),
                 Ticket::query()->where('status', TicketStatus::Closed->value)->count(),
                 TicketStatus::Closed->getIcon(),
                 TicketStatus::Closed->getColor(),
-                isActive: $tab === 'closed',
-                target: ['tab' => 'closed'],
+                isActive: $view === 'closed',
+                target: ['view' => 'closed'],
             ),
         ];
     }
@@ -82,6 +86,6 @@ class TicketStats extends StatsOverviewWidget
             ->icon($icon)
             ->color($isActive ? $color : 'gray')
             // Clicking the active one clears the selection instead of re-applying it.
-            ->url(TicketResource::getUrl('index', $isActive ? ['tab' => 'all'] : $target));
+            ->url(TicketResource::getUrl('index', $isActive ? ['view' => 'all'] : $target));
     }
 }

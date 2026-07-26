@@ -21,13 +21,13 @@ it('hides closed tickets by default, showing them via the Closed/All tabs', func
 
     Livewire::actingAs($user)
         ->test(ListTickets::class)
-        ->set('activeTab', 'closed')
+        ->set('scope', 'closed')
         ->assertCanSeeTableRecords([$closed])
         ->assertCanNotSeeTableRecords([$open]);
 
     Livewire::actingAs($user)
         ->test(ListTickets::class)
-        ->set('activeTab', 'all')
+        ->set('scope', 'all')
         ->assertCanSeeTableRecords([$open, $closed]);
 });
 
@@ -78,7 +78,7 @@ it('shows status and reason as two separate badges in one column', function (): 
 
     Livewire::actingAs($user)
         ->test(ListTickets::class)
-        ->set('activeTab', 'closed')
+        ->set('scope', 'closed')
         ->assertTableColumnStateSet('status', ['closed', 'duplicate'], $ticket)
         ->assertSee('Closed')
         ->assertSee('Duplicate');
@@ -121,7 +121,7 @@ it('closes several tickets at once, skipping the ones already closed', function 
 
     Livewire::actingAs($user)
         ->test(ListTickets::class)
-        ->set('activeTab', 'all')
+        ->set('scope', 'all')
         ->selectTableRecords([$open->getKey(), $alreadyClosed->getKey()])
         ->callAction(TestAction::make('close')->table()->bulk(), ['state_reason' => 'not_planned']);
 
