@@ -275,14 +275,15 @@ class TicketsTable
     }
 
     /**
-     * The linked issue, as a labelled button rather than an icon: the number IS the information,
-     * so this is the one row action that keeps its label.
+     * The linked issue, rendered as a badge rather than a button: it reads as the piece of data
+     * it is, not as something to trigger. No icon — the number IS the information, and this is
+     * the one row action that keeps its label for that reason.
      */
     private static function openGithubAction(): Action
     {
         return Action::make('openGithub')
             ->label(fn (Ticket $record): string => '#'.$record->github_issue_number)
-            ->icon(self::githubIcon())
+            ->badge()
             ->color('gray')
             ->url(fn (Ticket $record): ?string => $record->github_issue_url)
             ->openUrlInNewTab()

@@ -65,7 +65,9 @@ it('puts the issue link in the GitHub action slot, not in a column of its own', 
 
     expect($html)
         ->toContain('#15')
-        ->toContain('github.com/example/example/issues/15');
+        ->toContain('github.com/example/example/issues/15')
+        // Rendered as a badge, not a button: it reads as data, not as something to trigger.
+        ->toContain('fi-badge');
 });
 
 it('shows status and reason as two separate badges in one column', function (): void {

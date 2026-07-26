@@ -24,7 +24,7 @@ return [
         'not_configured' => 'GitHub is not configured (missing token or repository).',
         'steps' => 'Steps to reproduce',
         'reported_by' => 'Reported by',
-        'app_version' => 'App version',
+        'app_version' => 'Version',
         'page_url' => 'Page',
     ],
 
@@ -45,7 +45,7 @@ return [
         'assignees' => 'Assignees',
         'projects' => 'Projects',
         'page_url' => 'Page',
-        'app_version' => 'App version',
+        'app_version' => 'Version',
         'role' => 'Role',
         'reported_by' => 'Reported by',
         'reported_at' => 'Reported at',
