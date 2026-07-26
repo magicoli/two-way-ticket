@@ -196,13 +196,13 @@ final class SyncGithubIssues
      */
     private function importIssue(array $issue, ?array $projects): void
     {
+        // labels/milestone are deliberately absent here: applyIssueState owns every
+        // GitHub-mirrored field, for imports and updates alike, so there's one place to look.
         $ticket = new Ticket([
             'title' => (string) $issue['title'],
             'description' => (string) ($issue['body'] ?? ''),
             'app_version' => '',
             'role' => 'GitHub',
-            'labels' => self::names($issue['labels'] ?? [], 'name'),
-            'milestone' => $issue['milestone']['title'] ?? null,
             'github_issue_url' => (string) $issue['html_url'],
             'github_issue_number' => (int) $issue['number'],
         ]);
@@ -219,12 +219,16 @@ final class SyncGithubIssues
     private function applyIssueState(Ticket $ticket, array $issue, bool $save = true, ?array $projects = null): bool
     {
         // Oli, 2026-07-26: "on s'aligne à 100% sur le système de GitHub" — a straight mirror of
-        // issue.state/state_reason/closed_at/assignees/projects, nothing derived or guessed.
+        // issue.state/state_reason/closed_at/labels/milestone/assignees/projects, nothing derived
+        // or guessed. Mirroring means REPLACING, not merging: a label removed on GitHub has to
+        // disappear here too, which a merge would never do.
         $newStatus = $issue['state'] === 'closed' ? TicketStatus::Closed : TicketStatus::Open;
         $closedAt = $newStatus === TicketStatus::Closed
             ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now'))
             : null;
         $stateReason = $issue['state_reason'] ?? null;
+        $labels = self::names($issue['labels'] ?? [], 'name');
+        $milestone = $issue['milestone']['title'] ?? null;
         $assignees = self::names($issue['assignees'] ?? [], 'login');
         // null means projects couldn't be read at all — keep whatever is stored rather than wipe it.
         $newProjects = $projects === null
@@ -233,6 +237,8 @@ final class SyncGithubIssues
 
         $unchanged = $ticket->status === $newStatus
             && $ticket->state_reason === $stateReason
+            && $ticket->labels === $labels
+            && $ticket->milestone === $milestone
             && $ticket->assignees === $assignees
             && $ticket->projects === $newProjects
             && (($ticket->closed_at === null && $closedAt === null)
@@ -245,6 +251,8 @@ final class SyncGithubIssues
         $ticket->status = $newStatus;
         $ticket->closed_at = $closedAt;
         $ticket->state_reason = $stateReason;
+        $ticket->labels = $labels;
+        $ticket->milestone = $milestone;
         $ticket->assignees = $assignees;
         $ticket->projects = $newProjects;
 

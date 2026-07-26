@@ -54,9 +54,13 @@ class TicketsTable
                     ->formatStateUsing(fn (string $state): ?string => TicketStatus::tryFrom($state)?->getLabel()
                         ?? TicketStateReason::labelFor($state))
                     ->color(fn (string $state): string => TicketStatus::tryFrom($state)?->getColor() ?? 'gray'),
+                // Gray on purpose: a coloured badge here would highlight labels without actually
+                // distinguishing them. Colouring them properly means mirroring each label's own
+                // GitHub colour — a lot of work for little gain, so: neutral.
                 TextColumn::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->badge()
+                    ->color('gray')
                     ->separator(',')
                     ->sortable()
                     ->wrap()

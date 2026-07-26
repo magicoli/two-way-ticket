@@ -56,9 +56,11 @@ class TicketForm
                         ->options(fn(): array => Ticket::distinctValues('assignees'))
                         ->multiple()
                         ->native(false),
+                    // The full recognised catalogue, not just what's already in use — only the
+                    // FILTERS are limited to values actually present in the table.
                     Select::make('labels')
                         ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                        ->options(fn(): array => Ticket::distinctValues('labels'))
+                        ->options(fn(): array => Ticket::labelOptions())
                         ->multiple()
                         ->native(false),
                     Select::make('projects')

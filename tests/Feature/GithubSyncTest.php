@@ -169,6 +169,28 @@ it('keeps state_reason as a verbatim mirror, never turned into a guessed status'
         ->state_reason->toBe('not_planned');
 });
 
+it('removes locally a label that was removed on GitHub', function (): void {
+    // Oli, 2026-07-26: labels deleted on the repo stayed here — the sync mirrored status and
+    // assignees but never labels, so they only ever accumulated. Mirroring REPLACES.
+    $ticket = Ticket::factory()->linked(30)->create(['labels' => ['bug', 'wontfix'], 'milestone' => 'v1.0']);
+
+    Http::fake([
+        'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]]),
+        'api.github.com/repos/example/example/issues/30' => Http::response([
+            'number' => 30,
+            'state' => 'open',
+            'labels' => [['name' => 'bug']],
+            'milestone' => null,
+        ]),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    $result = resolve(SyncGithubIssues::class)->handle();
+
+    expect($result['updated'])->toBe(1);
+    expect($ticket->fresh())->labels->toBe(['bug'])->milestone->toBeNull();
+});
+
 it('syncs GitHub Projects, which only exist in the GraphQL API', function (): void {
     // The REST issue payload has no `projects` key at all — Projects (v2) are GraphQL-only.
     $ticket = Ticket::factory()->linked(20)->create();

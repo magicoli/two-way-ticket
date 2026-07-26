@@ -27,10 +27,18 @@ class EditTicket extends EditRecord
     /** All buttons grouped together at the top — never the Laravel-default top/bottom split. */
     protected function getHeaderActions(): array
     {
+        // Explicit labels: Filament derives an action's label from its NAME, which never goes
+        // through translations — these reuse its own panel strings, already localised.
         return [
-            Action::make('save')->action('save')->keyBindings(['mod+s']),
+            Action::make('save')
+                ->label(__('filament-panels::resources/pages/edit-record.form.actions.save.label'))
+                ->action('save')
+                ->keyBindings(['mod+s']),
             ViewAction::make(),
-            Action::make('cancel')->color('gray')->url(static::getResource()::getUrl('index')),
+            Action::make('cancel')
+                ->label(__('filament-panels::resources/pages/edit-record.form.actions.cancel.label'))
+                ->color('gray')
+                ->url(static::getResource()::getUrl('index')),
             DeleteAction::make(),
         ];
     }
