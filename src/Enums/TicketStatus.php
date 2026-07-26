@@ -30,7 +30,7 @@ enum TicketStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::Open => 'success',
-            self::Closed => 'gray',
+            self::Closed => 'danger',
         };
     }
 

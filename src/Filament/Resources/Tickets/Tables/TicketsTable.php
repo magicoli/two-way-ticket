@@ -92,7 +92,7 @@ class TicketsTable
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->label(__('two-way-ticket::two-way-ticket.field.reported_at'))
-                    ->dateTime()
+                    ->isoDateTime()
                     ->sortable()
                     ->toggleable(),
             ])

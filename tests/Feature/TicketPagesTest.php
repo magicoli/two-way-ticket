@@ -29,6 +29,28 @@ it('renders the view and edit pages for a fully populated ticket', function (): 
     Livewire::actingAs($user)->test(EditTicket::class, ['record' => $ticket->id])->assertOk();
 });
 
+it('orders dates the way the reader\'s locale does, never month-first outside en', function (): void {
+    // Oli, 2026-07-26, absolute rule: "juil. 25, 2026" n'a AUCUN sens pour un francophone, le
+    // mois vient APRES le jour. Carbon's isoFormat is what actually respects that; Filament's
+    // plain ->dateTime() default ('M j, Y H:i:s') does not, it just translates the month name
+    // in place and keeps the US ordering.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    $ticket = Ticket::factory()->create([
+        'title' => 'Dated',
+        'created_at' => '2026-07-25 11:50:00',
+    ]);
+
+    app()->setLocale('fr');
+
+    Livewire::actingAs($user)
+        ->test(ViewTicket::class, ['record' => $ticket->id])
+        ->assertSee('25 juil. 2026')
+        ->assertDontSee('juil. 25, 2026');
+
+    app()->setLocale('en');
+});
+
 it('renders both pages for a bare ticket, with every optional header part absent', function (): void {
     // Oli, 2026-07-26: "on n'affiche 'reported by', 'Closed' et 'Github' que si il y a une valeur".
     $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);

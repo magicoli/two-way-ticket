@@ -6,6 +6,7 @@ namespace Magicoli\TwoWayTicket\Tests;
 
 use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
 use BladeUI\Icons\BladeIconsServiceProvider;
+use Carbon\Laravel\ServiceProvider as CarbonServiceProvider;
 use Filament\Actions\ActionsServiceProvider;
 use Filament\FilamentServiceProvider;
 use Filament\Forms\FormsServiceProvider;
@@ -36,6 +37,10 @@ abstract class TestCase extends Orchestra
         return [
             BladeIconsServiceProvider::class,
             BladeHeroiconsServiceProvider::class,
+            // Auto-discovered in any real Laravel app; Testbench doesn't pick it up, and without
+            // it Carbon never follows app()->setLocale(), so every isoFormat() silently falls
+            // back to English ordering — exactly the bug the date tests are here to catch.
+            CarbonServiceProvider::class,
             // Order matters — see cerealkiller97/filament-bug-reports' own TestCase docblock:
             // Filament's SupportServiceProvider must register before Livewire's, or Livewire's
             // DataStore singleton gets dropped and every render blows up.

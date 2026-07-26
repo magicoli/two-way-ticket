@@ -6,6 +6,7 @@ namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
+use Filament\Support\Enums\TextSize;
 use Filament\Support\Enums\VerticalAlignment;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -13,10 +14,12 @@ use Magicoli\TwoWayTicket\Models\Ticket;
  * The read-only header shared by the view and edit pages — same fields, same order, same look,
  * defined once.
  *
- * Laid out as ONE formatted line the way GitHub does it, not a grid of labelled fields:
- * `[Closed] [completed] reported by User Name 26/07/2026 15:43 Closed 26/07/2026 15:47 [GitHub #1]`
- * Status, reason and the issue link are badges; the wording that would have been a label is a
- * prefix instead, and every optional part disappears entirely when it has no value.
+ * ONE line the way GitHub does it, not a grid of labelled fields:
+ * `[Closed] [completed] reported by User Name 25/07/2026 11:50 Closed 26/07/2026 15:47 [GitHub #1]`
+ *
+ * Everything that isn't a badge is a single text run, composed from the parts that actually have
+ * a value — Flex wraps each child in its own gapped <div>, so three separate entries for
+ * reporter/reported-at/closed-at left odd holes whenever one of them was empty.
  *
  * Status and state_reason are deliberately NOT editable inputs: changing them will go through a
  * controlled action offering the same dialog from the list, the edit page and the view page alike.
@@ -29,26 +32,17 @@ class TicketHeader
             TextEntry::make('status')
                 ->hiddenLabel()
                 ->badge()
+                ->size(TextSize::Large)
                 ->grow(false),
             TextEntry::make('state_reason')
                 ->hiddenLabel()
                 ->badge()
+                ->color('gray')
                 ->visible(fn (Ticket $record): bool => filled($record->state_reason))
-                ->grow(false),
-            TextEntry::make('user.name')
-                ->hiddenLabel()
-                ->prefix(__('two-way-ticket::two-way-ticket.issue.reported_by').' ')
-                ->visible(fn (Ticket $record): bool => filled($record->user?->name))
                 ->grow(false),
             TextEntry::make('created_at')
                 ->hiddenLabel()
-                ->dateTime()
-                ->grow(false),
-            TextEntry::make('closed_at')
-                ->hiddenLabel()
-                ->prefix(__('two-way-ticket::two-way-ticket.status.closed').' ')
-                ->dateTime()
-                ->visible(fn (Ticket $record): bool => filled($record->closed_at))
+                ->state(fn (Ticket $record): string => self::summary($record))
                 ->grow(false),
             TextEntry::make('github_issue_url')
                 ->hiddenLabel()
@@ -61,5 +55,25 @@ class TicketHeader
         ])
             ->verticalAlignment(VerticalAlignment::Center)
             ->columnSpanFull();
+    }
+
+    /**
+     * "reported by User Name 25/07/2026 11:50 · Closed 26/07/2026 15:47", minus whichever parts
+     * have no value. Dates go through Carbon's isoFormat, the only formatting that puts the
+     * day/month in the order the reader's own locale expects — never a hardcoded US-style format.
+     */
+    private static function summary(Ticket $record): string
+    {
+        $reporter = $record->user?->name;
+
+        return collect([
+            filled($reporter)
+                ? __('two-way-ticket::two-way-ticket.issue.reported_by').' '.$reporter
+                : null,
+            $record->created_at?->isoFormat('lll'),
+            $record->closed_at !== null
+                ? __('two-way-ticket::two-way-ticket.status.closed').' '.$record->closed_at->isoFormat('lll')
+                : null,
+        ])->filter()->implode(' · ');
     }
 }
