@@ -82,6 +82,12 @@ Une vraie page de vue (pas seulement le formulaire d'édition) :
 - Pour un ticket lié à GitHub : synchronisation bidirectionnelle — un commentaire ajouté ici part
   aussi sur l'issue GitHub, et un commentaire ajouté sur GitHub apparaît ici
 
+**Dépend de ça (Oli, 2026-07-26) : indiquer le commit qui corrige, à la clôture.** Le modal de
+clôture proposerait un champ hash pré-rempli avec le dernier commit, publié en commentaire
+(« Fixed in `a1b2c3d` ») comme le ferait un humain. Volontairement PAS une colonne locale : ce
+n'est pas un concept GitHub, et un champ qui ne part jamais sur l'issue romprait l'alignement.
+Reporté tant que les commentaires n'existent pas.
+
 ## 7. GitHub Projects — router un ticket vers le bon repo/projet
 
 GitHub Projects (le tableau, pas "un projet logiciel") permet de regrouper des issues à travers
