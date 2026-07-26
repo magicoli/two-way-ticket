@@ -23,6 +23,10 @@ use Magicoli\TwoWayTicket\Models\Ticket;
  *
  * Status and state_reason are deliberately NOT editable inputs: changing them will go through a
  * controlled action offering the same dialog from the list, the edit page and the view page alike.
+ *
+ * Every closure here takes a NULLABLE record: the create page runs this same form schema with no
+ * record at all, so a non-nullable hint blows the whole page up. The header hides itself there —
+ * there is no status, reporter or date to show for a ticket that doesn't exist yet.
  */
 class TicketHeader
 {
@@ -38,21 +42,22 @@ class TicketHeader
                 ->hiddenLabel()
                 ->badge()
                 ->color('gray')
-                ->visible(fn (Ticket $record): bool => filled($record->state_reason))
+                ->visible(fn (?Ticket $record): bool => filled($record?->state_reason))
                 ->grow(false),
             TextEntry::make('created_at')
                 ->hiddenLabel()
-                ->state(fn (Ticket $record): string => self::summary($record))
+                ->state(fn (?Ticket $record): string => $record instanceof Ticket ? self::summary($record) : '')
                 ->grow(false),
             TextEntry::make('github_issue_url')
                 ->hiddenLabel()
                 ->badge()
-                ->url(fn (Ticket $record): ?string => $record->github_issue_url)
+                ->url(fn (?Ticket $record): ?string => $record?->github_issue_url)
                 ->openUrlInNewTab()
-                ->formatStateUsing(fn (?string $state, Ticket $record): string => __('two-way-ticket::two-way-ticket.field.github').' #'.$record->github_issue_number)
-                ->visible(fn (Ticket $record): bool => $record->github_issue_number !== null)
+                ->formatStateUsing(fn (?string $state, ?Ticket $record): string => __('two-way-ticket::two-way-ticket.field.github').' #'.$record?->github_issue_number)
+                ->visible(fn (?Ticket $record): bool => $record?->github_issue_number !== null)
                 ->grow(false),
         ])
+            ->visible(fn (?Ticket $record): bool => $record?->exists ?? false)
             ->verticalAlignment(VerticalAlignment::Center)
             ->columnSpanFull();
     }

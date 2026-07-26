@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Livewire;
+use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\CreateTicket;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\EditTicket;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\ViewTicket;
 use Magicoli\TwoWayTicket\Models\Ticket;
@@ -27,6 +28,15 @@ it('renders the view and edit pages for a fully populated ticket', function (): 
 
     Livewire::actingAs($user)->test(ViewTicket::class, ['record' => $ticket->id])->assertOk();
     Livewire::actingAs($user)->test(EditTicket::class, ['record' => $ticket->id])->assertOk();
+});
+
+it('renders the create page, where there is no record for the header to describe', function (): void {
+    // The create page runs the same form schema with a null record, so every TicketHeader closure
+    // has to accept one — a non-nullable hint took the whole page down with a TypeError, and
+    // nothing here was rendering CreateTicket to catch it.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    Livewire::actingAs($user)->test(CreateTicket::class)->assertOk();
 });
 
 it('orders dates the way the reader\'s locale does, never month-first outside en', function (): void {
