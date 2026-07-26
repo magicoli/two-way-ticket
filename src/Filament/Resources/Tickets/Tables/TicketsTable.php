@@ -121,15 +121,6 @@ class TicketsTable
                     ->separator(',')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('github_issue_number')
-                    ->verticalAlignment(VerticalAlignment::Start)
-                    ->label(__('two-way-ticket::two-way-ticket.field.github'))
-                    ->formatStateUsing(fn(?int $state): ?string => $state === null ? null : '#' . $state)
-                    ->url(fn(Ticket $record): ?string => $record->github_issue_url)
-                    ->openUrlInNewTab()
-                    ->badge()
-                    ->sortable()
-                    ->color('success'),
                 TextColumn::make('app_version')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
@@ -264,6 +255,10 @@ class TicketsTable
             ])
             ->recordActions([
                 // Icon-only row actions, always — labels here are the quintessence of wasted space.
+                // The GitHub slot is the exception, and it holds one of two mutually exclusive
+                // actions: the issue link once there is one, the push button while there isn't.
+                // That replaced a whole column whose only job was to show the same number.
+                self::openGithubAction(),
                 self::pushToGithubAction()->iconButton(),
                 self::closeAction()->iconButton(),
                 ViewAction::make()->iconButton(),
@@ -277,6 +272,21 @@ class TicketsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * The linked issue, as a labelled button rather than an icon: the number IS the information,
+     * so this is the one row action that keeps its label.
+     */
+    private static function openGithubAction(): Action
+    {
+        return Action::make('openGithub')
+            ->label(fn (Ticket $record): string => '#'.$record->github_issue_number)
+            ->icon(self::githubIcon())
+            ->color('gray')
+            ->url(fn (Ticket $record): ?string => $record->github_issue_url)
+            ->openUrlInNewTab()
+            ->visible(fn (Ticket $record): bool => $record->isLinked());
     }
 
     /**

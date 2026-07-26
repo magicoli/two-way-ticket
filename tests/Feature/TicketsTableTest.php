@@ -55,6 +55,19 @@ it('shows the page path under the title, without costing the table its headers',
         ->not->toContain('Something broke, /admin/tickets');
 });
 
+it('puts the issue link in the GitHub action slot, not in a column of its own', function (): void {
+    // Oli, 2026-07-26: a whole column just to show the issue number, next to a push action that
+    // only ever appeared when there wasn't one. They share one slot now — mutually exclusive.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    Ticket::factory()->linked(15)->create(['title' => 'Linked one']);
+
+    $html = Livewire::actingAs($user)->test(ListTickets::class)->html();
+
+    expect($html)
+        ->toContain('#15')
+        ->toContain('github.com/example/example/issues/15');
+});
+
 it('shows status and reason as two separate badges in one column', function (): void {
     // Oli, 2026-07-26: two badges, not one merged label — status is the important one, the
     // reason is secondary and wraps underneath when the column is tight.
