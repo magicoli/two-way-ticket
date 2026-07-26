@@ -73,24 +73,31 @@ final class CreateGithubIssue
         return $payload;
     }
 
+    /**
+     * Always English, whatever the reporter's own interface language: this text lands on GitHub,
+     * read by whoever passes by, not by the user who filed it.
+     *
+     * No reporter line — GitHub already attributes the issue to whoever opened it, and locally
+     * it's right there in the ticket header. No "created from ticket #N" footer either: that
+     * number is a LOCAL id, and next to a GitHub issue everyone reads it as an issue number.
+     */
     private function body(Ticket $ticket): string
     {
-        $reporterName = $ticket->user?->getAttribute('name');
-        $reporter = is_string($reporterName) && $reporterName !== '' ? $reporterName : (string) __('two-way-ticket::two-way-ticket.issue.unknown_reporter');
-
-        if ($ticket->role !== '') {
-            $reporter .= ' ('.$ticket->role.')';
-        }
+        $page = $ticket->page_url !== null
+            // Path only — the host can be a private or local install, so the full URL says
+            // nothing useful to a GitHub reader and may leak an internal address.
+            ? parse_url($ticket->page_url, PHP_URL_PATH)
+            : null;
 
         return implode("\n", array_filter([
             $ticket->description,
             $ticket->description !== null ? '' : null,
-            '**'.__('two-way-ticket::two-way-ticket.issue.reported_by').':** '.$reporter,
-            '**'.__('two-way-ticket::two-way-ticket.issue.app_version').':** '.$ticket->app_version,
-            $ticket->page_url !== null ? '**'.__('two-way-ticket::two-way-ticket.issue.page_url').':** '.$ticket->page_url : null,
-            '',
-            '---',
-            (string) __('two-way-ticket::two-way-ticket.issue.footer', ['id' => $ticket->id]),
+            filled($ticket->app_version)
+                ? '**'.__('two-way-ticket::two-way-ticket.issue.app_version', [], 'en').':** '.$ticket->app_version
+                : null,
+            filled($page)
+                ? '**'.__('two-way-ticket::two-way-ticket.issue.page_url', [], 'en').':** `'.$page.'`'
+                : null,
         ], fn (?string $line): bool => $line !== null));
     }
 }

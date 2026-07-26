@@ -16,12 +16,9 @@ return [
     'issue' => [
         'not_configured' => 'GitHub n\'est pas configuré (token ou repository manquant).',
         'steps' => 'Étapes pour reproduire',
-        'no_steps' => 'Aucune étape fournie.',
         'reported_by' => 'Signalé par',
         'app_version' => 'Version de l\'app',
         'page_url' => 'Page',
-        'unknown_reporter' => 'Inconnu',
-        'footer' => 'Créé automatiquement depuis le ticket #:id.',
     ],
 
     'report_issue' => [

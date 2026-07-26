@@ -93,7 +93,7 @@ class ReportIssue extends Page
         if ($steps->isNotEmpty()) {
             $data['description'] = trim(
                 ($data['description'] ?? '')
-                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps')."\n"
+                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps', [], 'en')."\n"
                 .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n"),
             );
         }
@@ -101,7 +101,7 @@ class ReportIssue extends Page
         Ticket::create([
             ...$data,
             'status' => TicketStatus::Open,
-            'app_version' => config()->string('two-way-ticket.app_version', ''),
+            'app_version' => Ticket::reportingAppVersion(),
             'page_url' => $this->reportedFromUrl,
             'user_id' => Filament::auth()->id(),
         ]);

@@ -43,7 +43,7 @@ class TicketController extends Controller
         if ($steps->isNotEmpty()) {
             $description = trim(
                 $description
-                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps')."\n"
+                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps', [], 'en')."\n"
                 .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n"),
             );
         }
@@ -59,7 +59,7 @@ class TicketController extends Controller
             // Captured automatically — never accepted as free-form user input for what's meant
             // to record where the ticket was actually filed from (SPEC.md §3).
             'page_url' => $request->string('page_url')->toString() ?: $request->headers->get('referer'),
-            'app_version' => $request->string('app_version')->toString() ?: config()->string('two-way-ticket.app_version', ''),
+            'app_version' => $request->string('app_version')->toString() ?: Ticket::reportingAppVersion(),
             'role' => $request->string('role')->toString(),
         ]);
 

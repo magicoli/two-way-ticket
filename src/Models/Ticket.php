@@ -92,6 +92,21 @@ class Ticket extends Model
     }
 
     /**
+     * The build to stamp on a ticket reported FROM this app. Falls back to the host app's own
+     * `app.version` when the package isn't configured with one — the behaviour config/two-way-ticket.php
+     * always documented but never actually implemented, which is why the field came out empty.
+     *
+     * Deliberately not applied to imported GitHub issues: those didn't come from any build here,
+     * so their empty app_version is correct.
+     */
+    public static function reportingAppVersion(): string
+    {
+        $configured = config()->string('two-way-ticket.app_version', '');
+
+        return $configured !== '' ? $configured : (string) config('app.version', '');
+    }
+
+    /**
      * Every distinct value present across all tickets for a column, whether it holds one value
      * (milestone) or several (labels/assignees/projects). Feeds both the table filters and the
      * edit form's select lists — until those become properly managed catalogues (a label has to

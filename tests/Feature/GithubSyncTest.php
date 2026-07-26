@@ -61,6 +61,43 @@ it('pushes a linked ticket back onto its GitHub issue, description as the body v
         && $request['state'] === 'closed');
 });
 
+it('writes the issue body in English whatever the reporter\'s own language', function (): void {
+    // Oli, 2026-07-26: "Le formattage github doit être en anglais dans tous les cas, peu importe
+    // la langue de l'utilisateur" — this text lands on GitHub, read by whoever passes by.
+    Http::fake([
+        'api.github.com/repos/example/example/issues' => Http::response([
+            'html_url' => 'https://github.com/example/example/issues/50',
+            'number' => 50,
+        ], 201),
+    ]);
+
+    app()->setLocale('fr');
+
+    $ticket = Ticket::factory()->create([
+        'title' => 'Quelque chose casse',
+        'description' => 'La page plante.',
+        'app_version' => '1.2.3',
+        'page_url' => 'https://private.internal.test/admin/tickets?tab=closed',
+    ]);
+
+    resolve(CreateGithubIssue::class)->handle($ticket);
+
+    Http::assertSent(function ($request) use ($ticket): bool {
+        return str_contains($request['body'], '**App version:** 1.2.3')
+            && ! str_contains($request['body'], "Version de l'app")
+            // Path only: the host may be private or local, so the full URL is useless to a
+            // GitHub reader and leaks an internal address.
+            && str_contains($request['body'], '**Page:** `/admin/tickets`')
+            && ! str_contains($request['body'], 'private.internal.test')
+            // No reporter line, no "created from ticket #N" footer — that id is a LOCAL one and
+            // reads as a GitHub issue number next to a real issue.
+            && ! str_contains($request['body'], 'Reported by')
+            && ! str_contains($request['body'], '#'.$ticket->id);
+    });
+
+    app()->setLocale('en');
+});
+
 it('mirrors a linked ticket status from its real GitHub issue state', function (): void {
     $ticket = Ticket::factory()->linked(7)->create();
 

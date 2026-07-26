@@ -16,12 +16,9 @@ return [
     'issue' => [
         'not_configured' => 'GitHub is not configured (missing token or repository).',
         'steps' => 'Steps to reproduce',
-        'no_steps' => 'No steps provided.',
         'reported_by' => 'Reported by',
         'app_version' => 'App version',
         'page_url' => 'Page',
-        'unknown_reporter' => 'Unknown',
-        'footer' => 'Automatically created from ticket #:id.',
     ],
 
     'report_issue' => [

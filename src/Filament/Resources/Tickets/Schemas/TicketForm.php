@@ -31,7 +31,7 @@ class TicketForm
     {
         return $schema
             ->columns(3)
-            ->inlineLabel()
+            ->inlineLabel(false) // Keep labels separate from inputs in this specific form
             ->components([
                 TicketHeader::make(),
                 Group::make([
@@ -46,29 +46,29 @@ class TicketForm
                         ->label(__('two-way-ticket::two-way-ticket.field.screenshots'))
                         ->image()
                         ->multiple()
-                        ->disk(fn () => config()->string('two-way-ticket.screenshots.disk', 'public'))
-                        ->directory(fn () => config()->string('two-way-ticket.screenshots.directory', 'two-way-ticket'))
-                        ->maxFiles(fn () => config()->integer('two-way-ticket.screenshots.max_count', 5)),
+                        ->disk(fn() => config()->string('two-way-ticket.screenshots.disk', 'public'))
+                        ->directory(fn() => config()->string('two-way-ticket.screenshots.directory', 'two-way-ticket'))
+                        ->maxFiles(fn() => config()->integer('two-way-ticket.screenshots.max_count', 5)),
                 ])->columnSpan(2),
                 Group::make([
                     Select::make('assignees')
                         ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
-                        ->options(fn (): array => Ticket::distinctValues('assignees'))
+                        ->options(fn(): array => Ticket::distinctValues('assignees'))
                         ->multiple()
                         ->native(false),
                     Select::make('labels')
                         ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                        ->options(fn (): array => Ticket::distinctValues('labels'))
+                        ->options(fn(): array => Ticket::distinctValues('labels'))
                         ->multiple()
                         ->native(false),
                     Select::make('projects')
                         ->label(__('two-way-ticket::two-way-ticket.field.projects'))
-                        ->options(fn (): array => Ticket::distinctValues('projects'))
+                        ->options(fn(): array => Ticket::distinctValues('projects'))
                         ->multiple()
                         ->native(false),
                     Select::make('milestone')
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
-                        ->options(fn (): array => Ticket::distinctValues('milestone'))
+                        ->options(fn(): array => Ticket::distinctValues('milestone'))
                         ->native(false),
                 ]),
             ]);

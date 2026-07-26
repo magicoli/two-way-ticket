@@ -212,8 +212,6 @@ class TicketsTable
             ])
             ->recordActions([
                 // Icon-only row actions, always — labels here are the quintessence of wasted space.
-                ViewAction::make()->iconButton(),
-                EditAction::make()->iconButton(),
                 Action::make('pushToGithub')
                     ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
                     ->icon('heroicon-o-arrow-up-tray')
@@ -238,6 +236,8 @@ class TicketsTable
                             ->title(__('two-way-ticket::two-way-ticket.actions.pushed_to_github'))
                             ->send();
                     }),
+                ViewAction::make()->iconButton(),
+                EditAction::make()->iconButton(),
             ]);
     }
 }
