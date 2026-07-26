@@ -23,7 +23,7 @@ use Livewire\Attributes\Locked;
  * to, typically 'admin' only). Creates directly against the Ticket model, with no Resource/tenant
  * machinery involved at all — see {@see \Magicoli\TwoWayTicket\ReportIssuePlugin} for why that
  * separation matters. Uses its OWN minimal form ({@see ReportIssueForm}), not TicketForm — a
- * reporter doesn't choose status/priority/labels/milestone, those are triage fields.
+ * reporter doesn't choose status/labels/assignees/milestone/projects, those are triage fields.
  */
 class ReportIssue extends Page
 {
@@ -85,7 +85,7 @@ class ReportIssue extends Page
 
         Ticket::create([
             ...$data,
-            'status' => TicketStatus::New,
+            'status' => TicketStatus::Open,
             'app_version' => config()->string('two-way-ticket.app_version', ''),
             'page_url' => $this->reportedFromUrl,
             'user_id' => Filament::auth()->id(),

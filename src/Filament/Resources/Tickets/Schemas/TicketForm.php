@@ -12,7 +12,6 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Magicoli\TwoWayTicket\Enums\TicketPriority;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 
 class TicketForm
@@ -30,9 +29,10 @@ class TicketForm
                         ->columnSpanFull()
                         ->addActionLabel(__('two-way-ticket::two-way-ticket.field.add_step')),
                     Select::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->options(TicketStatus::class)->native(false)->required(),
-                    Select::make('priority')->label(__('two-way-ticket::two-way-ticket.field.priority'))->options(TicketPriority::class)->native(false),
-                    TagsInput::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->columnSpanFull(),
                     TextInput::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
+                    TagsInput::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->columnSpanFull(),
+                    TagsInput::make('assignees')->label(__('two-way-ticket::two-way-ticket.field.assignees'))->columnSpanFull(),
+                    TagsInput::make('projects')->label(__('two-way-ticket::two-way-ticket.field.projects'))->columnSpanFull(),
                 ])
                 ->columns(2),
             Section::make(__('two-way-ticket::two-way-ticket.field.screenshots'))

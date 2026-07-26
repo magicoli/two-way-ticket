@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Magicoli\TwoWayTicket\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use Magicoli\TwoWayTicket\Enums\TicketPriority;
 
 class StoreTicketRequest extends FormRequest
 {
@@ -26,9 +24,13 @@ class StoreTicketRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'steps' => ['nullable', 'array'],
             'steps.*' => ['string'],
-            'priority' => ['nullable', Rule::enum(TicketPriority::class)],
             'labels' => ['nullable', 'array'],
             'labels.*' => ['string'],
+            'assignees' => ['nullable', 'array'],
+            'assignees.*' => ['string'],
+            'milestone' => ['nullable', 'string', 'max:255'],
+            'projects' => ['nullable', 'array'],
+            'projects.*' => ['string'],
             'page_url' => ['nullable', 'string', 'max:2048'],
             'app_version' => ['nullable', 'string', 'max:255'],
             'role' => ['nullable', 'string', 'max:255'],

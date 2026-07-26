@@ -25,9 +25,9 @@ class ListTickets extends ListRecords
     {
         return [
             'open' => Tab::make(__('two-way-ticket::two-way-ticket.tab.open'))
-                ->query(fn (Builder $query): Builder => $query->where('status', '!=', TicketStatus::Resolved->value)),
+                ->query(fn (Builder $query): Builder => $query->where('status', TicketStatus::Open->value)),
             'closed' => Tab::make(__('two-way-ticket::two-way-ticket.tab.closed'))
-                ->query(fn (Builder $query): Builder => $query->where('status', TicketStatus::Resolved->value)),
+                ->query(fn (Builder $query): Builder => $query->where('status', TicketStatus::Closed->value)),
             'all' => Tab::make(__('two-way-ticket::two-way-ticket.tab.all')),
         ];
     }

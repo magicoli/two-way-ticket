@@ -45,8 +45,7 @@ it('submits a report with only the minimal reporter-facing fields', function ():
 
     expect($ticket)->not->toBeNull();
     expect($ticket->page_url)->toBe('https://example.test/app/quick-publish');
-    expect($ticket->status->value)->toBe('new');
-    expect($ticket->priority)->toBeNull();
+    expect($ticket->status->value)->toBe('open');
     expect($ticket->user_id)->toBe($user->id);
 });
 

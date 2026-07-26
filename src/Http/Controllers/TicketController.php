@@ -8,7 +8,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
-use Magicoli\TwoWayTicket\Enums\TicketPriority;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Http\Requests\StoreTicketRequest;
 use Magicoli\TwoWayTicket\Http\Requests\UpdateTicketRequest;
@@ -38,9 +37,11 @@ class TicketController extends Controller
             'title' => $request->string('title')->toString(),
             'description' => $request->input('description'),
             'steps' => $request->input('steps'),
-            'status' => TicketStatus::New,
-            'priority' => TicketPriority::fromInput($request->input('priority')),
+            'status' => TicketStatus::Open,
             'labels' => $request->input('labels', []),
+            'assignees' => $request->input('assignees', []),
+            'milestone' => $request->input('milestone'),
+            'projects' => $request->input('projects', []),
             // Captured automatically — never accepted as free-form user input for what's meant
             // to record where the ticket was actually filed from (SPEC.md §3).
             'page_url' => $request->string('page_url')->toString() ?: $request->headers->get('referer'),
@@ -60,16 +61,12 @@ class TicketController extends Controller
 
     public function update(UpdateTicketRequest $request, Ticket $ticket): TicketJsonResource
     {
-        $ticket->fill($request->only(['title', 'description', 'steps', 'labels']));
-
-        if ($request->has('priority')) {
-            $ticket->priority = TicketPriority::fromInput($request->input('priority'));
-        }
+        $ticket->fill($request->only(['title', 'description', 'steps', 'labels', 'assignees', 'milestone', 'projects']));
 
         if ($request->has('status')) {
             $ticket->status = TicketStatus::from($request->string('status')->toString());
-            $ticket->resolved_at = $ticket->status === TicketStatus::Resolved
-                ? ($ticket->resolved_at ?? now())
+            $ticket->closed_at = $ticket->status === TicketStatus::Closed
+                ? ($ticket->closed_at ?? now())
                 : null;
         }
 

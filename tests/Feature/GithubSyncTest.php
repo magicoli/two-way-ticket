@@ -6,33 +6,10 @@ use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
-it('refuses to push a ticket whose labels are all private', function (): void {
-    $ticket = Ticket::factory()->withLabels('billing')->create();
-
-    resolve(CreateGithubIssue::class)->handle($ticket);
-})->throws(RuntimeException::class);
-
-it('pushes a ticket with a mix of labels, stripping the private one from the payload', function (): void {
-    // Oli, 2026-07-26: "nos labels customs peuvent tout à fait se synchroniser vers github [...]
-    // la seule chose particulière c'est de pouvoir en garder qui sont privés (pas d'envoi du
-    // label, et pas d'envoi de l'issue si elle n'a que des labels privés)".
-    Http::fake([
-        'api.github.com/repos/example/example/issues' => Http::response([
-            'html_url' => 'https://github.com/example/example/issues/43',
-            'number' => 43,
-        ], 201),
-    ]);
-
-    $ticket = Ticket::factory()->withLabels('bug', 'billing')->create(['title' => 'Mixed labels']);
-
-    resolve(CreateGithubIssue::class)->handle($ticket);
-
-    Http::assertSent(function ($request): bool {
-        return in_array('bug', $request['labels'], true) && ! in_array('billing', $request['labels'], true);
-    });
-});
-
-it('pushes a syncable ticket to GitHub and stores the issue reference', function (): void {
+it('pushes a ticket to GitHub with all its labels, assignees, and milestone', function (): void {
+    // Oli, 2026-07-26: "on choisit manuellement de lier ou pas une issue locale à GitHub. Si on
+    // la lie, peu importe son ou ses labels, l'issue est synchronisée" — no gating at all beyond
+    // the manual "Push to GitHub" click itself.
     Http::fake([
         'api.github.com/repos/example/example/issues' => Http::response([
             'html_url' => 'https://github.com/example/example/issues/42',
@@ -40,7 +17,12 @@ it('pushes a syncable ticket to GitHub and stores the issue reference', function
         ], 201),
     ]);
 
-    $ticket = Ticket::factory()->withLabels('bug')->create(['title' => 'Real bug']);
+    $ticket = Ticket::factory()->create([
+        'title' => 'Real bug',
+        'labels' => ['bug', 'billing'],
+        'assignees' => ['oli'],
+        'milestone' => 'v1.1',
+    ]);
 
     resolve(CreateGithubIssue::class)->handle($ticket);
 
@@ -50,7 +32,9 @@ it('pushes a syncable ticket to GitHub and stores the issue reference', function
 
     Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), '/issues')
         && $request['title'] === 'Real bug'
-        && in_array('bug', $request['labels'], true));
+        && $request['labels'] === ['bug', 'billing']
+        && $request['assignees'] === ['oli']
+        && $request['milestone'] === 'v1.1');
 });
 
 it('mirrors a linked ticket status from its real GitHub issue state', function (): void {
@@ -68,7 +52,7 @@ it('mirrors a linked ticket status from its real GitHub issue state', function (
     $result = resolve(SyncGithubIssues::class)->handle();
 
     expect($result['updated'])->toBe(1);
-    expect($ticket->fresh())->status->toBe(TicketStatus::Resolved)->resolved_at->not->toBeNull();
+    expect($ticket->fresh())->status->toBe(TicketStatus::Closed)->closed_at->not->toBeNull();
 });
 
 it('imports a GitHub issue that has no local ticket at all', function (): void {
@@ -83,6 +67,7 @@ it('imports a GitHub issue that has no local ticket at all', function (): void {
                 'state' => 'open',
                 'html_url' => 'https://github.com/example/example/issues/99',
                 'labels' => [['name' => 'bug'], ['name' => 'good first issue']],
+                'assignees' => [['login' => 'oli']],
                 'milestone' => null,
             ],
         ]),
@@ -96,13 +81,14 @@ it('imports a GitHub issue that has no local ticket at all', function (): void {
     expect($imported)->not->toBeNull();
     expect($imported->title)->toBe('Reported straight on GitHub');
     expect($imported->labels)->toBe(['bug', 'good first issue']);
-    expect($imported->status)->toBe(TicketStatus::New);
+    expect($imported->assignees)->toBe(['oli']);
+    expect($imported->status)->toBe(TicketStatus::Open);
 });
 
-it('closes a linked ticket as Resolved regardless of why GitHub closed it', function (): void {
-    // Oli, 2026-07-26: "closed sur GitHub ne veut pas forcément dire Resolved [...] on s'aligne
-    // à 100% sur le système de GitHub" — Resolved means closed, full stop. The reason (wontfix,
-    // duplicate...) lives in github_state_reason and the labels, never guessed into a status.
+it('keeps state_reason as a verbatim mirror, never turned into a guessed status', function (): void {
+    // Oli, 2026-07-26: "si github a un champ state_reason, on en a un aussi, si il n'en a pas, on
+    // n'en a pas" — closed always means Closed, full stop; the WHY is stored as-is, not
+    // interpreted (wontfix/duplicate stay in the labels GitHub already gives us).
     $ticket = Ticket::factory()->linked(8)->create();
 
     Http::fake([
@@ -118,24 +104,8 @@ it('closes a linked ticket as Resolved regardless of why GitHub closed it', func
     resolve(SyncGithubIssues::class)->handle();
 
     expect($ticket->fresh())
-        ->status->toBe(TicketStatus::Resolved)
+        ->status->toBe(TicketStatus::Closed)
         ->github_state_reason->toBe('not_planned');
-});
-
-it('leaves local progress alone while an issue stays open, except moving a reopened ticket off Resolved', function (): void {
-    $inProgress = Ticket::factory()->linked(10)->create(['status' => 'in_progress']);
-    $wasResolved = Ticket::factory()->linked(11)->resolved()->create();
-
-    Http::fake([
-        'api.github.com/repos/example/example/issues/10' => Http::response(['number' => 10, 'state' => 'open']),
-        'api.github.com/repos/example/example/issues/11' => Http::response(['number' => 11, 'state' => 'open', 'state_reason' => 'reopened']),
-        'api.github.com/repos/example/example/issues*' => Http::response([]),
-    ]);
-
-    resolve(SyncGithubIssues::class)->handle();
-
-    expect($inProgress->fresh())->status->toBe(TicketStatus::InProgress);
-    expect($wasResolved->fresh())->status->toBe(TicketStatus::Triaged)->resolved_at->toBeNull();
 });
 
 it('does not re-import an issue that already has a local ticket', function (): void {

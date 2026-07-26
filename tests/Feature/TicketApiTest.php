@@ -21,16 +21,16 @@ it('creates a ticket', function (): void {
         'title' => 'Video export hangs at 90%',
         'description' => 'Happens on every long video.',
         'steps' => ['Open a campaign', 'Click "Generate video"'],
-        'priority' => 'high',
         'labels' => ['bug'],
+        'assignees' => ['oli'],
     ], withApiToken());
 
     $response
         ->assertCreated()
         ->assertJsonPath('data.title', 'Video export hangs at 90%')
-        ->assertJsonPath('data.priority', 'high')
-        ->assertJsonPath('data.status', 'new')
-        ->assertJsonPath('data.labels', ['bug']);
+        ->assertJsonPath('data.status', 'open')
+        ->assertJsonPath('data.labels', ['bug'])
+        ->assertJsonPath('data.assignees', ['oli']);
 
     $this->assertDatabaseHas('tickets', ['title' => 'Video export hangs at 90%']);
 });
@@ -49,17 +49,17 @@ it('rejects a store request without a title', function (): void {
 });
 
 it('lists tickets and filters by status', function (): void {
-    Ticket::factory()->create(['title' => 'New one']);
-    Ticket::factory()->linked()->create(['title' => 'Triaged one']);
-    Ticket::factory()->linked()->resolved()->create(['title' => 'Resolved one']);
+    Ticket::factory()->create(['title' => 'Open one']);
+    Ticket::factory()->linked()->create(['title' => 'Another open one']);
+    Ticket::factory()->linked()->closed()->create(['title' => 'Closed one']);
 
     $this->getJson('/api/tickets', withApiToken())->assertOk()->assertJsonCount(3, 'data');
 
     $this
-        ->getJson('/api/tickets?status=resolved', withApiToken())
+        ->getJson('/api/tickets?status=closed', withApiToken())
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.title', 'Resolved one');
+        ->assertJsonPath('data.0.title', 'Closed one');
 });
 
 it('filters by label', function (): void {
@@ -94,15 +94,15 @@ it('updates a ticket', function (): void {
     expect($ticket->fresh())->title->toBe('Revised title')->labels->toBe(['bug', 'urgent-fix']);
 });
 
-it('resolves a ticket without any GitHub issue at all', function (): void {
+it('closes a ticket without any GitHub issue at all', function (): void {
     $ticket = Ticket::factory()->create(['title' => 'No GitHub issue for this one']);
 
     $this
-        ->patchJson("/api/tickets/{$ticket->id}", ['status' => 'resolved'], withApiToken())
+        ->patchJson("/api/tickets/{$ticket->id}", ['status' => 'closed'], withApiToken())
         ->assertOk()
-        ->assertJsonPath('data.status', 'resolved');
+        ->assertJsonPath('data.status', 'closed');
 
     expect($ticket->fresh())
-        ->status->toBe(TicketStatus::Resolved)
-        ->resolved_at->not->toBeNull();
+        ->status->toBe(TicketStatus::Closed)
+        ->closed_at->not->toBeNull();
 });

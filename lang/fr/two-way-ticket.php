@@ -8,23 +8,13 @@ return [
         'plural' => 'Tickets',
     ],
 
-    'priority' => [
-        'low' => 'Basse',
-        'medium' => 'Moyenne',
-        'high' => 'Haute',
-        'urgent' => 'Urgente',
-    ],
-
     'status' => [
-        'new' => 'Nouveau',
-        'triaged' => 'Trié',
-        'in_progress' => 'En cours',
-        'resolved' => 'Résolu',
+        'open' => 'Ouvert',
+        'closed' => 'Fermé',
     ],
 
     'issue' => [
         'not_configured' => 'GitHub n\'est pas configuré (token ou repository manquant).',
-        'not_syncable' => 'Tous les labels de ce ticket sont privés — ajoutez-en un non privé avant de l\'envoyer sur GitHub.',
         'steps' => 'Étapes pour reproduire',
         'no_steps' => 'Aucune étape fournie.',
         'reported_by' => 'Signalé par',
@@ -46,15 +36,16 @@ return [
         'description' => 'Description',
         'steps' => 'Étapes pour reproduire',
         'status' => 'Statut',
-        'priority' => 'Priorité',
         'labels' => 'Étiquettes',
         'milestone' => 'Jalon',
+        'assignees' => 'Assignés',
+        'projects' => 'Projets',
         'page_url' => 'Page',
         'app_version' => 'Version de l\'app',
         'role' => 'Rôle',
         'reported_by' => 'Signalé par',
         'reported_at' => 'Signalé le',
-        'resolved_at' => 'Résolu le',
+        'closed_at' => 'Fermé le',
         'github_issue' => 'Issue GitHub',
         'github' => 'GitHub',
         'screenshots' => 'Captures d\'écran',
@@ -68,8 +59,9 @@ return [
 
     'filter' => [
         'status' => 'Statut',
-        'priority' => 'Priorité',
         'labels' => 'Etiquette',
+        'assignees' => 'Assigné',
+        'projects' => 'Projet',
         'milestone' => 'Jalon',
         'app_version' => 'Version',
         'user' => 'Utilisateur',

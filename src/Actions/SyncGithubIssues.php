@@ -119,7 +119,7 @@ final class SyncGithubIssues
             'description' => (string) ($issue['body'] ?? ''),
             'app_version' => '',
             'role' => 'GitHub',
-            'labels' => collect($issue['labels'] ?? [])->map(fn (array $label): string => (string) $label['name'])->values()->all(),
+            'labels' => self::names($issue['labels'] ?? [], 'name'),
             'milestone' => $issue['milestone']['title'] ?? null,
             'github_issue_url' => (string) $issue['html_url'],
             'github_issue_number' => (int) $issue['number'],
@@ -135,39 +135,43 @@ final class SyncGithubIssues
      */
     private function applyIssueState(Ticket $ticket, array $issue, bool $save = true): bool
     {
-        $isClosed = $issue['state'] === 'closed';
-        $closedAt = $isClosed ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now')) : null;
-
-        // Aligned 100% on GitHub's own model: only open/closed drives the status. Closed is
-        // always Resolved regardless of why (completed, wontfix, duplicate...) — that reason is
-        // a label, never a second local status. Open never overwrites local progress, except a
-        // ticket that was Resolved and got reopened, which can't stay Resolved.
-        $newStatus = match (true) {
-            $isClosed => TicketStatus::Resolved,
-            ! $ticket->exists => TicketStatus::New,
-            $ticket->status === TicketStatus::Resolved => TicketStatus::Triaged,
-            default => $ticket->status,
-        };
-
+        // Oli, 2026-07-26: "on s'aligne à 100% sur le système de GitHub" — a straight mirror of
+        // issue.state/state_reason/closed_at/assignees, nothing derived or guessed.
+        $newStatus = $issue['state'] === 'closed' ? TicketStatus::Closed : TicketStatus::Open;
+        $closedAt = $newStatus === TicketStatus::Closed
+            ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now'))
+            : null;
         $stateReason = $issue['state_reason'] ?? null;
+        $assignees = self::names($issue['assignees'] ?? [], 'login');
 
         $unchanged = $ticket->status === $newStatus
             && $ticket->github_state_reason === $stateReason
-            && (($ticket->resolved_at === null && $closedAt === null)
-                || ($ticket->resolved_at !== null && $closedAt !== null && $ticket->resolved_at->equalTo($closedAt)));
+            && $ticket->assignees === $assignees
+            && (($ticket->closed_at === null && $closedAt === null)
+                || ($ticket->closed_at !== null && $closedAt !== null && $ticket->closed_at->equalTo($closedAt)));
 
         if ($unchanged) {
             return false;
         }
 
         $ticket->status = $newStatus;
-        $ticket->resolved_at = $closedAt;
+        $ticket->closed_at = $closedAt;
         $ticket->github_state_reason = $stateReason;
+        $ticket->assignees = $assignees;
 
         if ($save) {
             $ticket->save();
         }
 
         return true;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<string>
+     */
+    private static function names(array $items, string $key): array
+    {
+        return collect($items)->map(fn (array $item): string => (string) $item[$key])->values()->all();
     }
 }

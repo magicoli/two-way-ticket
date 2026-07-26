@@ -11,8 +11,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 /**
- * The reporting end-user's own, deliberately minimal form — status/priority/labels/milestone are
- * triage fields for whoever manages the list (see TicketForm), not something a reporter chooses.
+ * The reporting end-user's own, deliberately minimal form — status/labels/assignees/milestone/
+ * projects are triage fields for whoever manages the list (see TicketForm), not something a
+ * reporter chooses.
  */
 class ReportIssueForm
 {

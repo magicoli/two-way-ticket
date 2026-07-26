@@ -6,7 +6,6 @@ namespace Magicoli\TwoWayTicket\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Magicoli\TwoWayTicket\Enums\TicketPriority;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 
 class UpdateTicketRequest extends FormRequest
@@ -27,9 +26,13 @@ class UpdateTicketRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'steps' => ['sometimes', 'nullable', 'array'],
             'steps.*' => ['string'],
-            'priority' => ['sometimes', 'nullable', Rule::enum(TicketPriority::class)],
             'labels' => ['sometimes', 'array'],
             'labels.*' => ['string'],
+            'assignees' => ['sometimes', 'array'],
+            'assignees.*' => ['string'],
+            'milestone' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'projects' => ['sometimes', 'array'],
+            'projects.*' => ['string'],
             'status' => ['sometimes', Rule::enum(TicketStatus::class)],
         ];
     }

@@ -8,23 +8,13 @@ return [
         'plural' => 'Tickets',
     ],
 
-    'priority' => [
-        'low' => 'Low',
-        'medium' => 'Medium',
-        'high' => 'High',
-        'urgent' => 'Urgent',
-    ],
-
     'status' => [
-        'new' => 'New',
-        'triaged' => 'Triaged',
-        'in_progress' => 'In progress',
-        'resolved' => 'Resolved',
+        'open' => 'Open',
+        'closed' => 'Closed',
     ],
 
     'issue' => [
         'not_configured' => 'GitHub is not configured (missing token or repository).',
-        'not_syncable' => 'Every label on this ticket is private — add a non-private one before pushing it to GitHub.',
         'steps' => 'Steps to reproduce',
         'no_steps' => 'No steps provided.',
         'reported_by' => 'Reported by',
@@ -46,15 +36,16 @@ return [
         'description' => 'Description',
         'steps' => 'Steps to reproduce',
         'status' => 'Status',
-        'priority' => 'Priority',
         'labels' => 'Labels',
         'milestone' => 'Milestone',
+        'assignees' => 'Assignees',
+        'projects' => 'Projects',
         'page_url' => 'Page',
         'app_version' => 'App version',
         'role' => 'Role',
         'reported_by' => 'Reported by',
         'reported_at' => 'Reported at',
-        'resolved_at' => 'Resolved at',
+        'closed_at' => 'Closed at',
         'github_issue' => 'GitHub issue',
         'github' => 'GitHub',
         'screenshots' => 'Screenshots',
@@ -68,8 +59,9 @@ return [
 
     'filter' => [
         'status' => 'Status',
-        'priority' => 'Priority',
         'labels' => 'Label',
+        'assignees' => 'Assignee',
+        'projects' => 'Project',
         'milestone' => 'Milestone',
         'app_version' => 'Version',
         'user' => 'User',

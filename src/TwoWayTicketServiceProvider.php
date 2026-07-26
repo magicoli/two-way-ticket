@@ -12,7 +12,11 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
         $package
             ->name('two-way-ticket')
             ->hasConfigFile('two-way-ticket')
-            ->hasMigrations(['create_tickets_table', 'add_github_state_reason_to_tickets_table'])
+            ->hasMigrations([
+                'create_tickets_table',
+                'add_github_state_reason_to_tickets_table',
+                'align_tickets_with_github_model',
+            ])
             ->hasRoute('api');
     }
 

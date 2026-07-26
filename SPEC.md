@@ -16,40 +16,36 @@ vue complète, ni sync GitHub bidirectionnelle, ni commentaires.
 
 Pas un enum fixe — des **labels**, ouverts, alignés sur les labels du repo GitHub configuré (ou,
 si pas encore de repo, les labels standard GitHub : `bug`, `documentation`, `duplicate`,
-`enhancement`, `question`, `help wanted`, `wontfix`, `invalid`, `good first issue`...). Un ticket
-peut porter plusieurs labels, comme sur GitHub.
+`enhancement`, `question`, `help wanted`, `wontfix`, `invalid`, `good first issue`... —
+`config('two-way-ticket.github.default_labels')`). Un ticket peut porter plusieurs labels, comme
+sur GitHub.
 
-`billing` est un exemple de label à AJOUTER localement, puisqu'il n'existe pas dans le set standard
-GitHub — les labels purement locaux (jamais poussés) doivent rester possibles, en particulier pour
-tout ce qui ne doit JAMAIS atteindre GitHub (facturation, support pur, etc.).
+`billing` est un exemple de label custom qu'on peut AJOUTER localement, puisqu'il n'existe pas
+dans le set standard GitHub. Lier un ticket à GitHub est toujours une action manuelle et explicite
+("Push to GitHub") — une fois lié, tout se synchronise, labels compris, sans filtrage séparé. Un
+ticket qu'on ne veut jamais voir sur GitHub reste simplement... jamais lié.
 
-## 2. Statut — uniquement ce que GitHub ne couvre pas déjà
+## 2. Statut — la copie conforme de GitHub, rien de plus
 
-Éviter toute collision avec des concepts déjà gérés par GitHub via les labels (`wontfix`,
-`duplicate` restent des LABELS, pas des statuts distincts — même pour un ticket purement local, on
-s'aligne sur ce vocabulaire).
+Oli, 2026-07-26 : "Où est-ce que ça apparaît dans GitHub?" — GitHub n'a que deux valeurs pour
+`issue.state` : `open` et `closed`. Pas de "New/Triaged/In progress/Resolved" — c'était une
+invention du package précédent, pas quelque chose que GitHub track. Le statut local EST cette
+même valeur, littéralement, pour un ticket lié comme pour un ticket purement local.
 
-Le statut local se limite donc à ce qui n'a pas d'équivalent GitHub direct — essentiellement le
-suivi de progression :
-
-- `new` — pas encore triée
-- `triaged` — reconnue comme réelle
-- `in_progress` — quelqu'un y travaille
-- `resolved` — traitée (fermée)
-
-Pour un ticket lié à GitHub, `resolved`/`in_progress` restent synchronisés avec l'état réel de
-l'issue (open/closed + éventuellement une convention d'assignee pour `in_progress`).
+`issue.state_reason` (`completed`/`not_planned`/`reopened`/`null`) est mirroré tel quel dans
+`github_state_reason`, jamais interprété en un statut local — la raison d'une fermeture (wontfix,
+duplicate...) reste dans les labels, pas dans une catégorie parallèle.
 
 ## 3. Champs
 
 - `title`
 - `description` — description générale du problème/demande
 - `steps` — étapes de reproduction, **séparées** de la description (les deux existent, pas fusionnées)
-- `status` (point 2), `priority`
-- `labels` (point 1) — relation many-to-many ou tableau, pas une seule colonne
-- `assignee` — aligné sur GitHub Assignee (qui prend en charge le ticket)
+- `status` (point 2) — `open`/`closed`, rien d'autre
+- `labels` (point 1) — tableau JSON, pas une seule colonne
+- `assignees` — aligné sur GitHub Assignees (tableau de logins, qui prend en charge le ticket)
 - `milestone` — aligné sur GitHub Milestone (point 5)
-- `github_project` — aligné sur GitHub Projects (point 6)
+- `projects` — aligné sur GitHub Projects (point 6)
 - `page_url` — l'URL de la page où le bug a été signalé, capturée automatiquement depuis la requête
   au moment du signalement (jamais saisie à la main)
 - `app_version`, `role`, `reported_by`
@@ -69,7 +65,7 @@ réellement dans la liste :
 - La **page d'origine** (`page_url`)
 - Une action plus complète qu'un simple "envoyer sur GitHub" (à affiner — probablement une action
   groupée labels/assignee/milestone/projects, pas juste la création d'issue)
-- Filtres : label, statut, priorité, milestone, github project, page
+- Filtres : label, statut, assignee, milestone, project, page
 
 ## 5. Vue détail
 

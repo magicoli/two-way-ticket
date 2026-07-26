@@ -10,27 +10,16 @@ use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Icons\Heroicon;
 
 /**
- * Deliberately just 4 values — see SPEC.md §2: anything GitHub already expresses via a LABEL
- * (wontfix, duplicate, invalid...) is a label here too, not a parallel status. This enum only
- * covers progress that has no GitHub label equivalent.
- *
- * Oli, 2026-07-26: "on s'aligne à 100% sur le système de GitHub" — for a ticket linked to GitHub,
- * sync only ever touches the one thing GitHub actually tracks: open vs closed. Closed => Resolved,
- * full stop, regardless of WHY it was closed (completed, wontfix, duplicate...) — that reason
- * already lives in the labels, never approximated into a second local status. Open never forces
- * anything (New/Triaged/InProgress are purely local progress, GitHub has no equivalent to sync
- * from) — the sole exception is a ticket reopened after being Resolved, which has to move
- * somewhere since it can no longer claim Resolved while open (see SyncGithubIssues).
+ * Oli, 2026-07-26: "Où est-ce que ça apparaît dans GitHub?" — GitHub's issue.state has exactly
+ * two values, open and closed. Nothing else (no New/Triaged/InProgress/Resolved — those were
+ * invented, not something GitHub tracks). A ticket not yet linked to GitHub still uses this same
+ * open/closed vocabulary locally, so there's one concept, not two.
  */
 enum TicketStatus: string implements HasColor, HasIcon, HasLabel
 {
-    case New = 'new';
+    case Open = 'open';
 
-    case Triaged = 'triaged';
-
-    case InProgress = 'in_progress';
-
-    case Resolved = 'resolved';
+    case Closed = 'closed';
 
     public function getLabel(): string
     {
@@ -40,20 +29,16 @@ enum TicketStatus: string implements HasColor, HasIcon, HasLabel
     public function getColor(): string
     {
         return match ($this) {
-            self::New => 'gray',
-            self::Triaged => 'info',
-            self::InProgress => 'warning',
-            self::Resolved => 'success',
+            self::Open => 'success',
+            self::Closed => 'gray',
         };
     }
 
     public function getIcon(): Heroicon
     {
         return match ($this) {
-            self::New => Heroicon::OutlinedInbox,
-            self::Triaged => Heroicon::OutlinedMagnifyingGlass,
-            self::InProgress => Heroicon::OutlinedWrench,
-            self::Resolved => Heroicon::OutlinedCheckCircle,
+            self::Open => Heroicon::OutlinedExclamationCircle,
+            self::Closed => Heroicon::OutlinedCheckCircle,
         };
     }
 }

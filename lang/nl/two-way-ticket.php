@@ -8,23 +8,13 @@ return [
         'plural' => 'Tickets',
     ],
 
-    'priority' => [
-        'low' => 'Laag',
-        'medium' => 'Gemiddeld',
-        'high' => 'Hoog',
-        'urgent' => 'Urgent',
-    ],
-
     'status' => [
-        'new' => 'Nieuw',
-        'triaged' => 'Beoordeeld',
-        'in_progress' => 'In behandeling',
-        'resolved' => 'Opgelost',
+        'open' => 'Open',
+        'closed' => 'Gesloten',
     ],
 
     'issue' => [
         'not_configured' => 'GitHub is niet geconfigureerd (token of repository ontbreekt).',
-        'not_syncable' => 'Alle labels van dit ticket zijn privé — voeg er een niet-privé label aan toe voordat u het naar GitHub stuurt.',
         'steps' => 'Stappen om te reproduceren',
         'no_steps' => 'Geen stappen opgegeven.',
         'reported_by' => 'Gemeld door',
@@ -46,15 +36,16 @@ return [
         'description' => 'Omschrijving',
         'steps' => 'Stappen om te reproduceren',
         'status' => 'Status',
-        'priority' => 'Prioriteit',
         'labels' => 'Labels',
         'milestone' => 'Mijlpaal',
+        'assignees' => 'Toegewezenen',
+        'projects' => 'Projecten',
         'page_url' => 'Pagina',
         'app_version' => 'App-versie',
         'role' => 'Rol',
         'reported_by' => 'Gemeld door',
         'reported_at' => 'Gemeld op',
-        'resolved_at' => 'Opgelost op',
+        'closed_at' => 'Gesloten op',
         'github_issue' => 'GitHub-issue',
         'github' => 'GitHub',
         'screenshots' => 'Schermafbeeldingen',
@@ -68,8 +59,9 @@ return [
 
     'filter' => [
         'status' => 'Status',
-        'priority' => 'Prioriteit',
         'labels' => 'Label',
+        'assignees' => 'Toegewezene',
+        'projects' => 'Project',
         'milestone' => 'Mijlpaal',
         'app_version' => 'Versie',
         'user' => 'Gebruiker',

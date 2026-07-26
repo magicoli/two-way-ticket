@@ -16,7 +16,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Magicoli\TwoWayTicket\Actions\CreateGithubIssue;
-use Magicoli\TwoWayTicket\Enums\TicketPriority;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -45,26 +44,34 @@ class TicketsTable
                     ->weight('medium')
                     ->sortable()
                     ->grow(),
-                TextColumn::make('priority')
-                    ->label(__('two-way-ticket::two-way-ticket.field.priority'))
+                TextColumn::make('assignees')
+                    ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
                     ->badge()
-                    ->sortable(),
-                TextColumn::make('page_url')
-                    ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
-                    ->url(fn(Ticket $record): ?string => $record->page_url)
-                    ->limit(30)
+                    ->separator(',')
                     ->sortable()
-                    ->searchable()
                     ->toggleable(),
                 TextColumn::make('milestone')
                     ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('projects')
+                    ->label(__('two-way-ticket::two-way-ticket.field.projects'))
+                    ->badge()
+                    ->separator(',')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('page_url')
+                    ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
+                    ->url(fn (Ticket $record): ?string => $record->page_url)
+                    ->limit(30)
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('github_issue_number')
                     ->label(__('two-way-ticket::two-way-ticket.field.github'))
-                    ->formatStateUsing(fn(?int $state): ?string => $state === null ? null : '#' . $state)
-                    ->url(fn(Ticket $record): ?string => $record->github_issue_url)
+                    ->formatStateUsing(fn (?int $state): ?string => $state === null ? null : '#'.$state)
+                    ->url(fn (Ticket $record): ?string => $record->github_issue_url)
                     ->openUrlInNewTab()
                     ->badge()
                     ->sortable()
@@ -88,10 +95,9 @@ class TicketsTable
                 [
                     // Open/Closed/All lives in the page's tabs (see ListTickets::getTabs()) as a
                     // general condition ANDed with these filters, not a replacement for this one
-                    // — Oli, 2026-07-26: still needs this to narrow among the real statuses
-                    // (new/triaged/in_progress...). No default here since the tabs already cover
-                    // the "only open" baseline. Custom Filter+Select (not SelectFilter) so
-                    // wrapOptionLabels(false) keeps a multi-selection on one line.
+                    // — still useful on its own since GitHub's state has exactly these two
+                    // values. Custom Filter+Select (not SelectFilter) so wrapOptionLabels(false)
+                    // keeps a multi-selection on one line.
                     Filter::make('status')
                         ->label(__('two-way-ticket::two-way-ticket.filter.status'))
                         ->schema([
@@ -103,40 +109,19 @@ class TicketsTable
                                 ->multiple()
                                 ->wrapOptionLabels(false),
                         ])
-                        ->query(fn(Builder $query, array $data): Builder => $query->when(
+                        ->query(fn (Builder $query, array $data): Builder => $query->when(
                             filled($data['values'] ?? null),
-                            fn(Builder $query): Builder => $query->whereIn('status', $data['values']),
+                            fn (Builder $query): Builder => $query->whereIn('status', $data['values']),
                         )),
-                    SelectFilter::make('priority')
-                        ->label(__('two-way-ticket::two-way-ticket.field.priority'))
-                        ->placeholder(__('two-way-ticket::two-way-ticket.filter.priority'))
-                        ->native(false)
-                        ->options(TicketPriority::class),
-                    Filter::make('labels')
-                        ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
-                        ->schema([
-                            Select::make('values')
-                                ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
-                                ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
-                                ->native(false)
-                                ->options(fn(): array => self::distinctLabelOptions())
-                                ->multiple()
-                                ->wrapOptionLabels(false),
-                        ])
-                        ->query(fn(Builder $query, array $data): Builder => $query->when(
-                            filled($data['values'] ?? null),
-                            fn(Builder $query): Builder => $query->where(function (Builder $query) use ($data): void {
-                                foreach ($data['values'] as $label) {
-                                    $query->orWhereJsonContains('labels', $label);
-                                }
-                            }),
-                        )),
+                    self::jsonColumnFilter('labels', fn (): array => self::distinctJsonOptions('labels', config()->array('two-way-ticket.github.default_labels', []))),
+                    self::jsonColumnFilter('assignees', fn (): array => self::distinctJsonOptions('assignees')),
+                    self::jsonColumnFilter('projects', fn (): array => self::distinctJsonOptions('projects')),
                     SelectFilter::make('milestone')
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.milestone'))
                         ->native(false)
                         ->options(
-                            fn(): array => Ticket::query()
+                            fn (): array => Ticket::query()
                                 ->whereNotNull('milestone')
                                 ->distinct()
                                 ->orderBy('milestone')
@@ -148,7 +133,7 @@ class TicketsTable
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.app_version'))
                         ->native(false)
                         ->options(
-                            fn(): array => Ticket::query()
+                            fn (): array => Ticket::query()
                                 ->whereNotNull('app_version')
                                 ->where('app_version', '!=', '')
                                 ->distinct()
@@ -176,7 +161,7 @@ class TicketsTable
                     ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
                     ->icon('heroicon-o-arrow-up-tray')
                     ->color('gray')
-                    ->visible(fn(Ticket $record): bool => !$record->isLinked() && $record->isSyncable())
+                    ->visible(fn (Ticket $record): bool => ! $record->isLinked())
                     ->action(function (Ticket $record): void {
                         try {
                             resolve(CreateGithubIssue::class)->handle($record);
@@ -199,17 +184,46 @@ class TicketsTable
     }
 
     /**
+     * A JSON-array column (labels/assignees/projects) filtered by "carries ANY of the selected
+     * values" — same shape for all three, factored out to avoid repeating the query closure.
+     */
+    private static function jsonColumnFilter(string $column, \Closure $options): Filter
+    {
+        return Filter::make($column)
+            ->label(__('two-way-ticket::two-way-ticket.filter.'.$column))
+            ->schema([
+                Select::make('values')
+                    ->label(__('two-way-ticket::two-way-ticket.filter.'.$column))
+                    ->placeholder(__('two-way-ticket::two-way-ticket.filter.'.$column))
+                    ->native(false)
+                    ->options($options)
+                    ->multiple()
+                    ->wrapOptionLabels(false),
+            ])
+            ->query(fn (Builder $query, array $data): Builder => $query->when(
+                filled($data['values'] ?? null),
+                fn (Builder $query): Builder => $query->where(function (Builder $query) use ($column, $data): void {
+                    foreach ($data['values'] as $value) {
+                        $query->orWhereJsonContains($column, $value);
+                    }
+                }),
+            ));
+    }
+
+    /**
+     * @param  list<string>  $seed
      * @return array<string, string>
      */
-    private static function distinctLabelOptions(): array
+    private static function distinctJsonOptions(string $column, array $seed = []): array
     {
         return Ticket::query()
-            ->whereNotNull('labels')
-            ->pluck('labels')
-            ->flatMap(fn(array $labels): array => $labels)
+            ->whereNotNull($column)
+            ->pluck($column)
+            ->flatMap(fn (array $values): array => $values)
+            ->concat($seed)
             ->unique()
             ->sort()
-            ->mapWithKeys(fn(string $label): array => [$label => $label])
+            ->mapWithKeys(fn (string $value): array => [$value => $value])
             ->all();
     }
 }

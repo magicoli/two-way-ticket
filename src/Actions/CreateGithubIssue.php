@@ -13,9 +13,9 @@ use Throwable;
 
 /**
  * Push a ticket to GitHub as a real issue, then store the reference back onto it. Idempotent: a
- * ticket that already has an issue is returned untouched. A ticket whose labels are ALL private
- * (see Ticket::isSyncable()) can't be pushed at all — enforced here, not just hidden in the UI —
- * and any private label it does carry is stripped from what's actually sent (Ticket::syncableLabels()).
+ * ticket that already has an issue is returned untouched. Oli, 2026-07-26: "on choisit
+ * manuellement de lier ou pas une issue locale à GitHub. Si on la lie, peu importe son ou ses
+ * labels, l'issue est synchronisée" — linking is itself the gate, nothing label-based on top.
  */
 final class CreateGithubIssue
 {
@@ -29,8 +29,6 @@ final class CreateGithubIssue
         if ($ticket->github_issue_url !== null) {
             return $ticket;
         }
-
-        throw_unless($ticket->isSyncable(), RuntimeException::class, __('two-way-ticket::two-way-ticket.issue.not_syncable'));
 
         $repository = config()->string('two-way-ticket.github.repository', '');
         $token = config()->string('two-way-ticket.github.token', '');
@@ -56,21 +54,20 @@ final class CreateGithubIssue
      */
     private function payload(Ticket $ticket): array
     {
-        /** @var list<string> $defaultLabels */
-        $defaultLabels = config()->array('two-way-ticket.github.labels', []);
-
-        $labels = array_values(array_unique([...$defaultLabels, ...$ticket->syncableLabels()]));
-
         $titlePrefix = config()->string('two-way-ticket.github.title_prefix', '');
 
         $payload = [
             'title' => $titlePrefix.$ticket->title,
             'body' => $this->body($ticket),
-            'labels' => $labels,
+            'labels' => (array) $ticket->labels,
         ];
 
         if ($ticket->milestone !== null) {
             $payload['milestone'] = $ticket->milestone;
+        }
+
+        if (filled($ticket->assignees)) {
+            $payload['assignees'] = $ticket->assignees;
         }
 
         return $payload;

@@ -73,22 +73,23 @@ return [
     | Empty (never null) when unset — an empty token or repository is what
     | raises the "GitHub is not configured" error.
     |
-    | `labels`: the default labels applied to every issue this package
-    | creates, in ADDITION to whatever labels the ticket itself carries.
+    | `default_labels`: GitHub's own standard label catalogue (what a fresh
+    | repo ships with) — offered as seed options in the label picker before
+    | any real repo-specific labels are known, customizable per project.
     |
-    | `private_labels`: custom labels sync to GitHub freely by default (GitHub
-    | creates them there if needed) — this is a DENY-list, not an allow-list.
-    | A label in here (e.g. "billing") never leaves the app: it's stripped
-    | from the push payload, and if a ticket's labels are ALL private, the
-    | issue itself isn't pushed at all ("Push to GitHub" hidden too).
+    | Linking a ticket to GitHub is always a manual, explicit action ("Push to
+    | GitHub") — once linked, everything on it syncs, labels included, with
+    | no separate gating on top.
     |
     */
 
     'github' => [
         'token' => env('TWO_WAY_TICKET_GITHUB_TOKEN', env('GITHUB_TOKEN', '')),
         'repository' => env('TWO_WAY_TICKET_GITHUB_REPOSITORY', ''),
-        'labels' => ['bug'],
-        'private_labels' => ['billing'],
+        'default_labels' => [
+            'bug', 'documentation', 'duplicate', 'enhancement', 'good first issue',
+            'help wanted', 'invalid', 'question', 'wontfix',
+        ],
         'title_prefix' => '',
     ],
 

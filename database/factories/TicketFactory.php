@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Magicoli\TwoWayTicket\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Magicoli\TwoWayTicket\Enums\TicketPriority;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -23,8 +22,7 @@ class TicketFactory extends Factory
     {
         return [
             'title' => fake()->sentence(),
-            'status' => TicketStatus::New,
-            'priority' => TicketPriority::Low,
+            'status' => TicketStatus::Open,
             'labels' => [],
             'app_version' => '1.0.0',
             'role' => '',
@@ -41,15 +39,14 @@ class TicketFactory extends Factory
         return $this->state([
             'github_issue_url' => "https://github.com/example/example/issues/{$issueNumber}",
             'github_issue_number' => $issueNumber,
-            'status' => TicketStatus::Triaged,
         ]);
     }
 
-    public function resolved(): static
+    public function closed(): static
     {
         return $this->state([
-            'status' => TicketStatus::Resolved,
-            'resolved_at' => now(),
+            'status' => TicketStatus::Closed,
+            'closed_at' => now(),
         ]);
     }
 }

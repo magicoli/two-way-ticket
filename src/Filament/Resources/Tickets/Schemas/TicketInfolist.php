@@ -29,9 +29,10 @@ class TicketInfolist
                             TextEntry::make('step')->hiddenLabel(),
                         ]),
                     TextEntry::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->badge(),
-                    TextEntry::make('priority')->label(__('two-way-ticket::two-way-ticket.field.priority'))->badge(),
                     TextEntry::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->badge(),
+                    TextEntry::make('assignees')->label(__('two-way-ticket::two-way-ticket.field.assignees'))->badge(),
                     TextEntry::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
+                    TextEntry::make('projects')->label(__('two-way-ticket::two-way-ticket.field.projects'))->badge(),
                     TextEntry::make('page_url')->label(__(
                         'two-way-ticket::two-way-ticket.field.page_url',
                     ))->url(fn(Ticket $record): ?string => $record->page_url),
@@ -49,8 +50,8 @@ class TicketInfolist
                             !== null
                                 ? '#' . $record->github_issue_number
                                 : null),
-                    TextEntry::make('resolved_at')
-                        ->label(__('two-way-ticket::two-way-ticket.field.resolved_at'))
+                    TextEntry::make('closed_at')
+                        ->label(__('two-way-ticket::two-way-ticket.field.closed_at'))
                         ->dateTime(),
                 ])
                 ->columns(2),
