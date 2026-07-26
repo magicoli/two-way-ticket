@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
@@ -43,6 +44,7 @@ class TicketsTable
                 // enum values double as the discriminator, since no status value can collide
                 // with a reason one.
                 TextColumn::make('status')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
                     ->badge()
                     ->sortable()
@@ -58,6 +60,7 @@ class TicketsTable
                 // distinguishing them. Colouring them properly means mirroring each label's own
                 // GitHub colour — a lot of work for little gain, so: neutral.
                 TextColumn::make('labels')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->badge()
                     ->color('gray')
@@ -74,6 +77,7 @@ class TicketsTable
                 // out too, but it switches the whole table into Filament's header-less card mode,
                 // costing EVERY column its header — and with it, sorting.
                 TextColumn::make('title')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.title'))
                     ->searchable()
                     ->sortable()
@@ -96,23 +100,27 @@ class TicketsTable
                         ? 'medium'
                         : null),
                 TextColumn::make('assignees')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
                     ->badge()
                     ->separator(',')
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('milestone')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('projects')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.projects'))
                     ->badge()
                     ->separator(',')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('github_issue_number')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.github'))
                     ->formatStateUsing(fn(?int $state): ?string => $state === null ? null : '#' . $state)
                     ->url(fn(Ticket $record): ?string => $record->github_issue_url)
@@ -121,15 +129,18 @@ class TicketsTable
                     ->sortable()
                     ->color('success'),
                 TextColumn::make('app_version')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('user.name')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.reported_by'))
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('created_at')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.reported_at'))
                     ->isoDateTime()
                     ->sortable()
