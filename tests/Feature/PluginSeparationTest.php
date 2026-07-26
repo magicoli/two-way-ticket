@@ -75,7 +75,7 @@ it('composes the description once from the structured fields, in English, path o
     expect(Ticket::query()->where('title', 'Composed')->value('description'))->toBe(
         "It breaks.\n\n".
         "## Steps to reproduce\n1. Open it\n2. Look\n\n".
-        "- **Version:** 2.0.0\n- **Page:** `/admin/tickets`",
+        "## Details\n- **Version:** 2.0.0\n- **Page:** `/admin/tickets`",
     );
 });
 

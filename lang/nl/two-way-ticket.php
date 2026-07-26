@@ -22,6 +22,7 @@ return [
 
     'issue' => [
         'not_configured' => 'GitHub is niet geconfigureerd (token of repository ontbreekt).',
+        'details' => 'Details',
         'steps' => 'Stappen om te reproduceren',
         'reported_by' => 'Gemeld door',
         'app_version' => 'Versie',

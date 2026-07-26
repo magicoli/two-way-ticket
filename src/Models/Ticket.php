@@ -122,13 +122,17 @@ class Ticket extends Model
                 : null,
         ])->filter();
 
+        // Only the description itself goes without a heading — it IS the body. Every other
+        // section that has content announces itself.
         $composed = collect([
             filled($description) ? trim($description) : null,
             $steps->isNotEmpty()
                 ? '## '.__('two-way-ticket::two-way-ticket.issue.steps', [], 'en')."\n"
                     .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n")
                 : null,
-            $details->isNotEmpty() ? $details->implode("\n") : null,
+            $details->isNotEmpty()
+                ? '## '.__('two-way-ticket::two-way-ticket.issue.details', [], 'en')."\n".$details->implode("\n")
+                : null,
         ])->filter()->implode("\n\n");
 
         return $composed !== '' ? $composed : null;

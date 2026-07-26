@@ -22,6 +22,7 @@ return [
 
     'issue' => [
         'not_configured' => 'GitHub is not configured (missing token or repository).',
+        'details' => 'Details',
         'steps' => 'Steps to reproduce',
         'reported_by' => 'Reported by',
         'app_version' => 'Version',
