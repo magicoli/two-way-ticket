@@ -15,7 +15,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\VerticalAlignment;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
@@ -286,7 +285,7 @@ class TicketsTable
     {
         return BulkAction::make('assign')
             ->label(__('two-way-ticket::two-way-ticket.actions.assign'))
-            ->icon(Heroicon::OutlinedTag)
+            ->icon('heroicon-o-tag')
             ->color('gray')
             ->schema([
                 Select::make('labels')
@@ -408,7 +407,7 @@ class TicketsTable
         if ($bulk) {
             return BulkAction::make('close')
                 ->label(__('two-way-ticket::two-way-ticket.actions.close'))
-                ->icon(Heroicon::OutlinedCheckCircle)
+                ->icon('heroicon-o-check-circle')
                 ->color('gray')
                 ->schema($schema)
                 ->action(fn(Collection $records, array $data) => self::runOverRecords($records, $close($data)))
@@ -417,7 +416,7 @@ class TicketsTable
 
         return Action::make('close')
             ->label(__('two-way-ticket::two-way-ticket.actions.close'))
-            ->icon(Heroicon::OutlinedCheckCircle)
+            ->icon('heroicon-o-check-circle')
             ->color('gray')
             ->schema($schema)
             ->visible(fn(Ticket $record): bool => $record->status !== TicketStatus::Closed)

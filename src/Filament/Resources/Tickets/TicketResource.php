@@ -7,7 +7,6 @@ namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\CreateTicket;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\EditTicket;
@@ -22,7 +21,7 @@ class TicketResource extends Resource
 {
     protected static ?string $model = Ticket::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTicket;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
 
     protected static ?string $recordTitleAttribute = 'title';
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets;
 
-use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
@@ -22,8 +21,8 @@ use Magicoli\TwoWayTicket\Models\Ticket;
  * ListTickets::getTableQuery); only "Bugs" goes through a table filter, because a label is not
  * a state.
  *
- * The active one is coloured and carries a check icon while the others go gray, so the colour
- * says WHICH selection you're looking at rather than merely decorating.
+ * The active one is coloured while the others go gray, and its card is tinted by the host app
+ * through `twt-stat-active` — a caption saying "showing" was too quiet to notice.
  */
 class TicketStats extends StatsOverviewWidget
 {
@@ -85,7 +84,7 @@ class TicketStats extends StatsOverviewWidget
     private function stat(
         string $label,
         int $value,
-        string|\BackedEnum $icon,
+        string $icon,
         string $color,
         bool $isActive,
         array $target,
@@ -93,12 +92,9 @@ class TicketStats extends StatsOverviewWidget
         return Stat::make($label, $value)
             ->icon($icon)
             ->color($isActive ? $color : 'gray')
-            // Filament hardcodes the stat card's background, so no built-in class can tint it.
-            // The package marks the active one and the host app styles that class — see the
-            // README. The check icon is the fallback that works with no styling at all.
+            // Filament hardcodes the stat card's background, so no built-in class can tint it:
+            // the package marks the active card and the host app styles it (see the README).
             ->extraAttributes($isActive ? ['class' => 'twt-stat-active'] : [])
-            ->descriptionIcon($isActive ? Heroicon::OutlinedCheckCircle : null)
-            ->description($isActive ? __('two-way-ticket::two-way-ticket.stats.showing') : null)
             // Every stat toggles, Open included: it's the default view on ARRIVAL, not a state
             // you're stuck in, so clicking the active one always widens to everything.
             ->url(TicketResource::getUrl('index', $isActive ? ['view' => 'all'] : $target));

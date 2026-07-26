@@ -7,7 +7,6 @@ namespace Magicoli\TwoWayTicket\Enums;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
-use Filament\Support\Icons\Heroicon;
 
 /**
  * Oli, 2026-07-26: "Où est-ce que ça apparaît dans GitHub?" — GitHub's issue.state has exactly
@@ -34,11 +33,11 @@ enum TicketStatus: string implements HasColor, HasIcon, HasLabel
         };
     }
 
-    public function getIcon(): Heroicon
+    public function getIcon(): string
     {
         return match ($this) {
-            self::Open => Heroicon::OutlinedExclamationCircle,
-            self::Closed => Heroicon::OutlinedCheckCircle,
+            self::Open => 'heroicon-o-exclamation-circle',
+            self::Closed => 'heroicon-o-check-circle',
         };
     }
 }

@@ -68,11 +68,11 @@ only accept tokens.
 
 The stats above the ticket list are clickable filters, and the selected one carries the class
 `twt-stat-active`. Filament hardcodes a stat card's background, so no built-in class can tint it —
-add a rule to your own Filament theme if you want more than the check icon:
+add a rule to your own Filament theme — without one, the only cue is that the other cards go gray:
 
 ```css
 .twt-stat-active {
-    @apply bg-primary-50 ring-primary-600/20 dark:bg-primary-950 dark:ring-primary-400/20;
+    @apply bg-primary-100 ring-2 ring-primary-500 dark:bg-primary-800 dark:ring-primary-400;
 }
 ```
 
