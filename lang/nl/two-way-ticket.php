@@ -24,7 +24,7 @@ return [
         'not_configured' => 'GitHub is niet geconfigureerd (token of repository ontbreekt).',
         'steps' => 'Stappen om te reproduceren',
         'reported_by' => 'Gemeld door',
-        'app_version' => 'App-versie',
+        'app_version' => 'Versie',
         'page_url' => 'Pagina',
     ],
 
@@ -45,7 +45,7 @@ return [
         'assignees' => 'Toegewezenen',
         'projects' => 'Projecten',
         'page_url' => 'Pagina',
-        'app_version' => 'App-versie',
+        'app_version' => 'Versie',
         'role' => 'Rol',
         'reported_by' => 'Gemeld door',
         'reported_at' => 'Gemeld op',
