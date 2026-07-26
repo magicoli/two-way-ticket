@@ -12,9 +12,12 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
         $package
             ->name('two-way-ticket')
             ->hasConfigFile('two-way-ticket')
-            // Timestamped like any Laravel migration: the prefix is what guarantees the order
-            // they run in (an ALTER can't precede its own CREATE), and it's the convention every
-            // package is expected to follow. Publishing strips and regenerates the prefix anyway.
+            // Run straight from the package — no publishing step, and no copies in the host app
+            // to drift from these. Two things make that work: the timestamp prefix (it's what
+            // orders them, an ALTER can't precede its own CREATE) and the plain `.php` extension
+            // (Laravel's migrator ignores anything not ending in .php, so a `.stub` would load
+            // nothing at all). Publishing still works for anyone who wants their own copies.
+            ->runsMigrations()
             ->hasMigrations([
                 '2026_07_25_180156_create_tickets_table',
                 '2026_07_26_013127_add_github_state_reason_to_tickets_table',

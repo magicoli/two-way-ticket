@@ -17,9 +17,19 @@ planned for V2 (see SPEC.md).
 
 ```bash
 composer require magicoli/two-way-ticket
-php artisan vendor:publish --tag=two-way-ticket-migrations
 php artisan migrate
 ```
+
+The migrations run straight from the package — nothing to publish, and no copies in your app to
+drift from ours. Publish them only if you want to own and edit them:
+`php artisan vendor:publish --tag=two-way-ticket-migrations`.
+
+Optional: publish translations (only needed to override the wording or add locales for your app; the package's own translations (en/fr/nl) load on their own.)
+
+```bash
+php artisan vendor:publish --tag=two-way-ticket-translations
+```
+
 
 Set in `.env`:
 
@@ -53,14 +63,6 @@ user account**, not the repository, so scoping it to one repo doesn't restrict p
 Deploy keys are **not** an option here: they authenticate git transport (clone/push over SSH) and
 give no access to the issues API at all. Same for SSH keys in general — the REST and GraphQL APIs
 only accept tokens.
-
-## Publishing translations
-
-```bash
-php artisan vendor:publish --tag=two-way-ticket-translations
-```
-
-Only needed to override the wording; the package's own translations (en/fr/nl) load on their own.
 
 ## License
 

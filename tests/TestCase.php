@@ -83,11 +83,9 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
-        // Every stub, in filename order — which is exactly what the timestamp prefixes are for.
-        // Globbing rather than listing them keeps this from silently missing a new migration,
-        // and a wrongly ordered prefix fails the whole suite instead of going unnoticed.
-        foreach (glob(__DIR__.'/../database/migrations/*.php.stub') ?: [] as $migration) {
-            (include $migration)->up();
-        }
+        // Nothing to include by hand: the package registers its own migrations
+        // (`->runsMigrations()`), so they run here exactly as they do in a host app. Which also
+        // means the suite genuinely exercises that registration, rather than a parallel path
+        // that could keep passing while the real one is broken.
     }
 }
