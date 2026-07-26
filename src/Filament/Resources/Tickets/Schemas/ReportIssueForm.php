@@ -40,9 +40,12 @@ class ReportIssueForm
                 ->label(__('two-way-ticket::two-way-ticket.field.description'))
                 ->autosize()
                 ->columnSpanFull(),
+            // No rows to start with, and none required: plenty of reports need no steps at all,
+            // and a repeater that opens with one mandatory empty row blocks submitting.
             Repeater::make('steps')
                 ->label(__('two-way-ticket::two-way-ticket.field.steps'))
-                ->simple(TextInput::make('step')->required())
+                ->simple(TextInput::make('step'))
+                ->defaultItems(0)
                 ->columnSpanFull()
                 ->addActionLabel(__('two-way-ticket::two-way-ticket.field.add_step')),
             // The full catalogue, not just what's already in use: a reporter filing the very

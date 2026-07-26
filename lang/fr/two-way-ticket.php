@@ -13,6 +13,13 @@ return [
         'closed' => 'Fermé',
     ],
 
+    'state_reason' => [
+        'completed' => 'Terminé',
+        'not_planned' => 'Non planifié',
+        'duplicate' => 'Doublon',
+        'reopened' => 'Rouvert',
+    ],
+
     'issue' => [
         'not_configured' => 'GitHub n\'est pas configuré (token ou repository manquant).',
         'steps' => 'Étapes pour reproduire',
@@ -72,6 +79,8 @@ return [
     ],
 
     'actions' => [
+        'close' => 'Fermer',
+        'done' => ':count ticket(s) mis à jour.',
         'sync_with_github' => 'Synchroniser avec GitHub',
         'synced' => 'Synchronisé',
         'sync_failed' => 'Échec de la synchronisation',

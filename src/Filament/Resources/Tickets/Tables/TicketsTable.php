@@ -5,17 +5,25 @@ declare(strict_types=1);
 namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Tables;
 
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Magicoli\TwoWayTicket\Actions\CloseTicket;
 use Magicoli\TwoWayTicket\Actions\CreateGithubIssue;
+use Magicoli\TwoWayTicket\Enums\TicketStateReason;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -27,13 +35,17 @@ class TicketsTable
             ->defaultSort('created_at', 'desc')
             ->emptyStateHeading(__('two-way-ticket::two-way-ticket.table.empty'))
             ->columns([
+                // Status and reason read as one thing ("Closed · Duplicate"), so they share one
+                // wrappable column instead of eating two. Sorted by status, the meaningful part.
                 TextColumn::make('status')
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
                     ->badge()
-                    ->sortable(),
-                TextColumn::make('state_reason')
-                    ->label(__('two-way-ticket::two-way-ticket.field.state_reason'))
-                    ->toggleable(),
+                    ->sortable()
+                    ->wrap()
+                    ->formatStateUsing(fn (TicketStatus $state, Ticket $record): string => collect([
+                        $state->getLabel(),
+                        TicketStateReason::labelFor($record->state_reason),
+                    ])->filter()->implode(' · ')),
                 TextColumn::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
                     ->badge()
@@ -212,32 +224,158 @@ class TicketsTable
             ])
             ->recordActions([
                 // Icon-only row actions, always — labels here are the quintessence of wasted space.
-                Action::make('pushToGithub')
-                    ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
-                    ->icon('heroicon-o-arrow-up-tray')
-                    ->iconButton()
-                    ->color('gray')
-                    ->visible(fn(Ticket $record): bool => !$record->isLinked())
-                    ->action(function (Ticket $record): void {
-                        try {
-                            resolve(CreateGithubIssue::class)->handle($record);
-                        } catch (\Throwable $throwable) {
-                            Notification::make()
-                                ->danger()
-                                ->title(__('two-way-ticket::two-way-ticket.actions.could_not_push'))
-                                ->body($throwable->getMessage())
-                                ->send();
-
-                            return;
-                        }
-
-                        Notification::make()
-                            ->success()
-                            ->title(__('two-way-ticket::two-way-ticket.actions.pushed_to_github'))
-                            ->send();
-                    }),
+                self::pushToGithubAction()->iconButton(),
+                self::closeAction()->iconButton(),
                 ViewAction::make()->iconButton(),
                 EditAction::make()->iconButton(),
+                DeleteAction::make()->iconButton(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    self::pushToGithubAction(bulk: true),
+                    self::closeAction(bulk: true),
+                    DeleteBulkAction::make(),
+                ]),
             ]);
+    }
+
+    /**
+     * Same action, offered per row and in bulk — built once so the two can't drift apart.
+     * Confirmation required either way: pushing creates a real, public issue.
+     */
+    private static function pushToGithubAction(bool $bulk = false): Action|BulkAction
+    {
+        $push = function (Ticket $record): bool {
+            if ($record->isLinked()) {
+                return false;
+            }
+
+            resolve(CreateGithubIssue::class)->handle($record);
+
+            return true;
+        };
+
+        if ($bulk) {
+            return BulkAction::make('pushToGithub')
+                ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
+                ->icon(self::githubIcon())
+                ->color('gray')
+                ->requiresConfirmation()
+                ->action(fn (Collection $records) => self::runOverRecords($records, $push))
+                ->deselectRecordsAfterCompletion();
+        }
+
+        return Action::make('pushToGithub')
+            ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
+            ->icon(self::githubIcon())
+            ->color('gray')
+            ->requiresConfirmation()
+            ->visible(fn (Ticket $record): bool => ! $record->isLinked())
+            ->action(fn (Ticket $record) => self::runOverRecords(collect([$record]), $push));
+    }
+
+    /**
+     * Closing asks for a reason the way GitHub does, and lets the labels be adjusted in the same
+     * breath — closing as "duplicate" usually means labelling it as such too.
+     */
+    private static function closeAction(bool $bulk = false): Action|BulkAction
+    {
+        $schema = [
+            Select::make('state_reason')
+                ->label(__('two-way-ticket::two-way-ticket.field.state_reason'))
+                ->options(TicketStateReason::closingOptions())
+                ->default(TicketStateReason::Completed->value)
+                ->native(false)
+                ->required(),
+            Select::make('labels')
+                ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                ->options(fn (): array => Ticket::labelOptions())
+                ->multiple()
+                ->native(false),
+        ];
+
+        $close = fn (array $data): callable => function (Ticket $record) use ($data): bool {
+            if ($record->status === TicketStatus::Closed) {
+                return false;
+            }
+
+            resolve(CloseTicket::class)->handle(
+                $record,
+                $data['state_reason'],
+                // Untouched when left empty: an empty picker means "don't bother", not "strip
+                // every label this ticket has".
+                filled($data['labels'] ?? null) ? $data['labels'] : null,
+            );
+
+            return true;
+        };
+
+        if ($bulk) {
+            return BulkAction::make('close')
+                ->label(__('two-way-ticket::two-way-ticket.actions.close'))
+                ->icon(Heroicon::OutlinedCheckCircle)
+                ->color('gray')
+                ->schema($schema)
+                ->action(fn (Collection $records, array $data) => self::runOverRecords($records, $close($data)))
+                ->deselectRecordsAfterCompletion();
+        }
+
+        return Action::make('close')
+            ->label(__('two-way-ticket::two-way-ticket.actions.close'))
+            ->icon(Heroicon::OutlinedCheckCircle)
+            ->color('gray')
+            ->schema($schema)
+            ->visible(fn (Ticket $record): bool => $record->status !== TicketStatus::Closed)
+            ->action(fn (Ticket $record, array $data) => self::runOverRecords(collect([$record]), $close($data)));
+    }
+
+    /**
+     * Applies an operation to every record, reporting once at the end. One failure doesn't abort
+     * the rest — with a bulk selection, stopping halfway would leave the user guessing which
+     * records went through.
+     *
+     * @param  Collection<int, Ticket>  $records
+     * @param  callable(Ticket): bool  $operation  Returns false when the record needed nothing.
+     */
+    private static function runOverRecords(Collection $records, callable $operation): void
+    {
+        $done = 0;
+        $failures = [];
+
+        foreach ($records as $record) {
+            try {
+                if ($operation($record)) {
+                    $done++;
+                }
+            } catch (\Throwable $throwable) {
+                $failures[] = '#'.$record->getKey().': '.$throwable->getMessage();
+            }
+        }
+
+        if ($failures !== []) {
+            Notification::make()
+                ->danger()
+                ->persistent()
+                ->title(__('two-way-ticket::two-way-ticket.actions.could_not_push'))
+                ->body(implode("\n", $failures))
+                ->send();
+        }
+
+        if ($done > 0) {
+            Notification::make()
+                ->success()
+                ->title(__('two-way-ticket::two-way-ticket.actions.done', ['count' => $done]))
+                ->send();
+        }
+    }
+
+    /**
+     * The GitHub mark, when the host app ships an icon set that has one — it's not in Heroicons.
+     * Configurable rather than hardcoded so the package never references an icon set it doesn't
+     * depend on (Blade Icons throws outright on an unknown set).
+     */
+    private static function githubIcon(): string
+    {
+        return config()->string('two-way-ticket.github.icon', 'heroicon-o-arrow-up-tray');
     }
 }

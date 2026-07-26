@@ -13,6 +13,13 @@ return [
         'closed' => 'Gesloten',
     ],
 
+    'state_reason' => [
+        'completed' => 'Voltooid',
+        'not_planned' => 'Niet gepland',
+        'duplicate' => 'Duplicaat',
+        'reopened' => 'Heropend',
+    ],
+
     'issue' => [
         'not_configured' => 'GitHub is niet geconfigureerd (token of repository ontbreekt).',
         'steps' => 'Stappen om te reproduceren',
@@ -72,6 +79,8 @@ return [
     ],
 
     'actions' => [
+        'close' => 'Sluiten',
+        'done' => ':count ticket(s) bijgewerkt.',
         'sync_with_github' => 'Synchroniseren met GitHub',
         'synced' => 'Gesynchroniseerd',
         'sync_failed' => 'Synchronisatie mislukt',

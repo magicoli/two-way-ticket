@@ -86,6 +86,12 @@ return [
     'github' => [
         'token' => env('TWO_WAY_TICKET_GITHUB_TOKEN', env('GITHUB_TOKEN', '')),
         'repository' => env('TWO_WAY_TICKET_GITHUB_REPOSITORY', ''),
+        /*
+         | Icon for the "push to GitHub" action. Heroicons has no GitHub mark, and Blade Icons
+         | throws outright on an unknown set, so the default stays neutral — point this at
+         | 'ri-github-fill' or 'bi-github' if your app ships that icon set.
+         */
+        'icon' => env('TWO_WAY_TICKET_GITHUB_ICON', 'heroicon-o-arrow-up-tray'),
         'default_labels' => [
             'bug', 'documentation', 'duplicate', 'enhancement', 'good first issue',
             'help wanted', 'invalid', 'question', 'wontfix',

@@ -38,13 +38,16 @@ final class UpdateGithubIssue
         Http::withToken($token)
             ->acceptJson()
             ->withHeaders(['X-GitHub-Api-Version' => '2022-11-28'])
-            ->patch(sprintf('https://api.github.com/repos/%s/issues/%d', $repository, $ticket->github_issue_number), [
+            ->patch(sprintf('https://api.github.com/repos/%s/issues/%d', $repository, $ticket->github_issue_number), array_filter([
                 'title' => $ticket->title,
                 'body' => (string) $ticket->description,
                 'labels' => (array) $ticket->labels,
                 'assignees' => (array) $ticket->assignees,
                 'state' => $ticket->status->value,
-            ])
+                // Omitted rather than sent as null: GitHub rejects a null state_reason, and an
+                // open issue simply has none.
+                'state_reason' => $ticket->state_reason,
+            ], fn (mixed $value): bool => $value !== null))
             ->throw();
 
         return $ticket;

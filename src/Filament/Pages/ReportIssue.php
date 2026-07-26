@@ -112,6 +112,9 @@ class ReportIssue extends Page
 
         Notification::make()->success()->title(__('two-way-ticket::two-way-ticket.report_issue.submitted'))->send();
 
-        $this->redirect(url()->previous(Filament::getUrl()));
+        // Back to wherever the reporter was when they hit the button. url()->previous() can't do
+        // that here: by the time this runs, the "previous" page IS the report form, so it just
+        // bounced back onto itself. The `from` captured at mount() is the real origin.
+        $this->redirect($this->reportedFromUrl ?? Filament::getUrl());
     }
 }
