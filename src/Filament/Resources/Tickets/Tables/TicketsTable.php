@@ -100,20 +100,21 @@ class TicketsTable
                     // would be enough — but SelectFilter can't do wrapOptionLabels(), which the
                     // other multi-value filters below need, so this stays a raw Filter+Select too
                     // for consistency between all the multi-value ones.
-                    Filter::make('status')
-                        ->label(__('two-way-ticket::two-way-ticket.filter.status'))
-                        ->schema([
-                            Select::make('values')
-                                ->label(__('two-way-ticket::two-way-ticket.filter.status'))
-                                ->placeholder(__('two-way-ticket::two-way-ticket.filter.status'))
-                                ->native(false)
-                                ->options(TicketStatus::class)
-                                ->multiple(),
-                        ])
-                        ->query(fn(Builder $query, array $data): Builder => $query->when(
-                            filled($data['values'] ?? null),
-                            fn(Builder $query): Builder => $query->whereIn('status', $data['values']),
-                        )),
+                    // Filter::make('status')
+                    //     ->label(__('two-way-ticket::two-way-ticket.filter.status'))
+                    //     ->schema([
+                    //         Select::make('values')
+                    //             ->label(__('two-way-ticket::two-way-ticket.filter.status'))
+                    //             ->placeholder(__('two-way-ticket::two-way-ticket.filter.status'))
+                    //             ->native(false)
+                    //             ->options(TicketStatus::class)
+                    //             ->multiple()
+                    //             ->wrapOptionLabels(false),
+                    //     ])
+                    //     ->query(fn(Builder $query, array $data): Builder => $query->when(
+                    //         filled($data['values'] ?? null),
+                    //         fn(Builder $query): Builder => $query->whereIn('status', $data['values']),
+                    //     )),
                     // labels/assignees/projects: a ticket can carry SEVERAL values at once, stored
                     // as a JSON array — SelectFilter's own whereIn() can't express "this array
                     // contains any of the selected values", so each needs its own whereJsonContains
@@ -126,7 +127,8 @@ class TicketsTable
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
                                 ->native(false)
                                 ->options(fn(): array => self::distinctValues('labels'))
-                                ->multiple(),
+                                ->multiple()
+                                ->wrapOptionLabels(false),
                         ])
                         ->query(fn(Builder $query, array $data): Builder => $query->when(
                             filled($data['values'] ?? null),
@@ -208,7 +210,7 @@ class TicketsTable
             ->filtersFormColumns([
                 'xs' => 2,
                 'sm' => 4,
-                'xl' => 7,
+                'xl' => 6,
             ])
             ->recordActions([
                 ViewAction::make(),
