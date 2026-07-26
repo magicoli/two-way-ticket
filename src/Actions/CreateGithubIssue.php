@@ -13,8 +13,9 @@ use Throwable;
 
 /**
  * Push a ticket to GitHub as a real issue, then store the reference back onto it. Idempotent: a
- * ticket that already has an issue is returned untouched. Only tickets carrying a syncable label
- * (see Ticket::isSyncable()) may be pushed at all — enforced here, not just hidden in the UI.
+ * ticket that already has an issue is returned untouched. A ticket whose labels are ALL private
+ * (see Ticket::isSyncable()) can't be pushed at all — enforced here, not just hidden in the UI —
+ * and any private label it does carry is stripped from what's actually sent (Ticket::syncableLabels()).
  */
 final class CreateGithubIssue
 {
@@ -58,7 +59,7 @@ final class CreateGithubIssue
         /** @var list<string> $defaultLabels */
         $defaultLabels = config()->array('two-way-ticket.github.labels', []);
 
-        $labels = array_values(array_unique([...$defaultLabels, ...((array) $ticket->labels)]));
+        $labels = array_values(array_unique([...$defaultLabels, ...$ticket->syncableLabels()]));
 
         $titlePrefix = config()->string('two-way-ticket.github.title_prefix', '');
 

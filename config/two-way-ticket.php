@@ -76,10 +76,11 @@ return [
     | `labels`: the default labels applied to every issue this package
     | creates, in ADDITION to whatever labels the ticket itself carries.
     |
-    | `syncable_labels`: only tickets carrying at least one of these labels
-    | are eligible to be pushed to GitHub at all ("Push to GitHub" is hidden
-    | otherwise) — a label like "billing" that's never in this list stays
-    | strictly local, by design (see SPEC.md §1).
+    | `private_labels`: custom labels sync to GitHub freely by default (GitHub
+    | creates them there if needed) — this is a DENY-list, not an allow-list.
+    | A label in here (e.g. "billing") never leaves the app: it's stripped
+    | from the push payload, and if a ticket's labels are ALL private, the
+    | issue itself isn't pushed at all ("Push to GitHub" hidden too).
     |
     */
 
@@ -87,7 +88,7 @@ return [
         'token' => env('TWO_WAY_TICKET_GITHUB_TOKEN', env('GITHUB_TOKEN', '')),
         'repository' => env('TWO_WAY_TICKET_GITHUB_REPOSITORY', ''),
         'labels' => ['bug'],
-        'syncable_labels' => ['bug', 'enhancement'],
+        'private_labels' => ['billing'],
         'title_prefix' => '',
     ],
 

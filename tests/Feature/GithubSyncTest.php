@@ -6,11 +6,31 @@ use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
-it('refuses to push a ticket with no syncable label', function (): void {
+it('refuses to push a ticket whose labels are all private', function (): void {
     $ticket = Ticket::factory()->withLabels('billing')->create();
 
     resolve(CreateGithubIssue::class)->handle($ticket);
 })->throws(RuntimeException::class);
+
+it('pushes a ticket with a mix of labels, stripping the private one from the payload', function (): void {
+    // Oli, 2026-07-26: "nos labels customs peuvent tout à fait se synchroniser vers github [...]
+    // la seule chose particulière c'est de pouvoir en garder qui sont privés (pas d'envoi du
+    // label, et pas d'envoi de l'issue si elle n'a que des labels privés)".
+    Http::fake([
+        'api.github.com/repos/example/example/issues' => Http::response([
+            'html_url' => 'https://github.com/example/example/issues/43',
+            'number' => 43,
+        ], 201),
+    ]);
+
+    $ticket = Ticket::factory()->withLabels('bug', 'billing')->create(['title' => 'Mixed labels']);
+
+    resolve(CreateGithubIssue::class)->handle($ticket);
+
+    Http::assertSent(function ($request): bool {
+        return in_array('bug', $request['labels'], true) && ! in_array('billing', $request['labels'], true);
+    });
+});
 
 it('pushes a syncable ticket to GitHub and stores the issue reference', function (): void {
     Http::fake([

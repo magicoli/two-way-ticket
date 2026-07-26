@@ -24,7 +24,7 @@ return [
 
     'issue' => [
         'not_configured' => 'GitHub is niet geconfigureerd (token of repository ontbreekt).',
-        'not_syncable' => 'Dit ticket heeft geen synchroniseerbaar label — voeg er een toe voordat u het naar GitHub stuurt.',
+        'not_syncable' => 'Alle labels van dit ticket zijn privé — voeg er een niet-privé label aan toe voordat u het naar GitHub stuurt.',
         'steps' => 'Stappen om te reproduceren',
         'no_steps' => 'Geen stappen opgegeven.',
         'reported_by' => 'Gemeld door',

@@ -93,15 +93,34 @@ class Ticket extends Model
     }
 
     /**
-     * Only a ticket carrying at least one syncable label (config `github.syncable_labels`) can
-     * be pushed to GitHub at all — see SPEC.md §1: a label like "billing" that's never in that
-     * list stays strictly local, by design.
+     * Oli, 2026-07-26: "nos labels customs peuvent tout à fait se synchroniser vers github [...]
+     * la seule chose particulière c'est de pouvoir en garder qui sont privés" — custom labels
+     * sync freely by default; `github.private_labels` is a DENY-list, not an allow-list. A
+     * ticket is only blocked from pushing at all when EVERY label it carries is private (no
+     * labels at all is not "only private", so it's still syncable).
      */
     public function isSyncable(): bool
     {
-        /** @var list<string> $syncableLabels */
-        $syncableLabels = config()->array('two-way-ticket.github.syncable_labels', []);
+        $labels = (array) $this->labels;
 
-        return array_intersect((array) $this->labels, $syncableLabels) !== [];
+        if ($labels === []) {
+            return true;
+        }
+
+        /** @var list<string> $privateLabels */
+        $privateLabels = config()->array('two-way-ticket.github.private_labels', []);
+
+        return array_diff($labels, $privateLabels) !== [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function syncableLabels(): array
+    {
+        /** @var list<string> $privateLabels */
+        $privateLabels = config()->array('two-way-ticket.github.private_labels', []);
+
+        return array_values(array_diff((array) $this->labels, $privateLabels));
     }
 }
