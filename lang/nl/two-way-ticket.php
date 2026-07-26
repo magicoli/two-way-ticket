@@ -74,6 +74,7 @@ return [
     ],
 
     'stats' => [
+        'showing' => 'Weergegeven',
         'open' => 'Open',
         'bug' => 'Bugs',
         'in_progress' => 'In behandeling',

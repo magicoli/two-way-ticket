@@ -74,6 +74,7 @@ return [
     ],
 
     'stats' => [
+        'showing' => 'Showing',
         'open' => 'Open',
         'bug' => 'Bugs',
         'in_progress' => 'In progress',

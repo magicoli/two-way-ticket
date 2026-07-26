@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets;
 
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
@@ -21,11 +22,18 @@ use Magicoli\TwoWayTicket\Models\Ticket;
  * ListTickets::getTableQuery); only "Bugs" goes through a table filter, because a label is not
  * a state.
  *
- * The active one is coloured and the others go gray, so the colour says WHICH selection you're
- * looking at rather than merely decorating. Clicking the active one clears back to everything.
+ * The active one is coloured and carries a check icon while the others go gray, so the colour
+ * says WHICH selection you're looking at rather than merely decorating.
  */
 class TicketStats extends StatsOverviewWidget
 {
+    /**
+     * NOT lazy, and that's the whole reason the highlight works: a lazy widget renders in a
+     * SECOND request of its own, which carries none of the page's query string — so
+     * request()->query('view') came back empty every time and the active stat never moved.
+     */
+    protected static bool $isLazy = false;
+
     protected function getStats(): array
     {
         $open = fn () => Ticket::query()->where('status', TicketStatus::Open->value);
@@ -85,7 +93,15 @@ class TicketStats extends StatsOverviewWidget
         return Stat::make($label, $value)
             ->icon($icon)
             ->color($isActive ? $color : 'gray')
-            // Clicking the active one clears the selection instead of re-applying it.
-            ->url(TicketResource::getUrl('index', $isActive ? ['view' => 'all'] : $target));
+            // Colour alone was too quiet to read at a glance, and it can't carry the "Closed"
+            // stat at all — its own colour IS gray. The check makes the selection unmistakable.
+            ->description($isActive ? __('two-way-ticket::two-way-ticket.stats.showing') : null)
+            ->descriptionIcon($isActive ? Heroicon::OutlinedCheckCircle : null)
+            // Clicking the one you're already on goes back to the default view rather than to
+            // "everything" — Open is that default, so it always simply means "show me the open
+            // ones" instead of toggling itself off.
+            ->url(TicketResource::getUrl('index', $isActive && $target !== ['view' => 'open']
+                ? ['view' => 'open']
+                : $target));
     }
 }

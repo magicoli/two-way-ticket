@@ -71,9 +71,27 @@ it('highlights the active stat and greys the rest', function (): void {
         ->and($colours([])[0])->toBe('success');
 });
 
-it('clears the selection when the active stat is clicked again', function (): void {
-    expect(statUrls(['view' => 'in_progress'])[2])->toContain('view=all')
-        ->and(statUrls(['view' => 'closed'])[3])->toContain('view=all');
+it('returns to the default view when the active stat is clicked again', function (): void {
+    // Back to Open, not to "everything": Oli, 2026-07-26, "Open [...] affiche tout au lieu de
+    // seulement les tickets ouverts" — Open is the default, so clicking it can only ever mean
+    // "show me the open ones", never toggle itself off.
+    expect(statUrls(['view' => 'in_progress'])[2])->toContain('view=open')
+        ->and(statUrls(['view' => 'closed'])[3])->toContain('view=open')
+        ->and(statUrls([])[0])->toContain('view=open');
+});
+
+it('renders inside the page request, or the highlight can never move', function (): void {
+    // A lazy widget loads in a second request that carries none of the page's query string, so
+    // request()->query('view') came back empty every time and the active stat stayed put.
+    expect(TicketStats::isLazy())->toBeFalse();
+});
+
+it('marks the active stat with more than a colour', function (): void {
+    // Colour alone can't carry Closed — its own colour IS gray.
+    $descriptions = fn (array $query) => array_map(fn ($stat) => $stat->getDescription(), statsFor($query));
+
+    expect($descriptions(['view' => 'closed'])[3])->not->toBeNull()
+        ->and($descriptions(['view' => 'closed'])[0])->toBeNull();
 });
 
 it('is registered above the list', function (): void {
