@@ -11,11 +11,12 @@
    (--color-white, --gray-900 in dark) with no colour variant, so marking the selection takes a
    rule of our own — there is no built-in class that tints it. */
 .twt-stat-active {
-    background-color: var(--primary-100);
-    box-shadow: 0 0 0 2px var(--primary-500);
+    background-color: var(--primary-500);
+    /* Same fill in both themes; only the ring flips — darker than the fill on a light theme,
+       lighter on a dark one — so the card keeps a visible edge either way. */
+    box-shadow: 0 0 0 2px var(--primary-700);
 }
 
 :is(.dark, .dark *) .twt-stat-active {
-    background-color: var(--primary-800);
-    box-shadow: 0 0 0 2px var(--primary-400);
+    box-shadow: 0 0 0 2px var(--primary-300);
 }
