@@ -31,8 +31,8 @@ class TicketsTable
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
                     ->badge()
                     ->sortable(),
-                TextColumn::make('github_state_reason')
-                    ->label(__('two-way-ticket::two-way-ticket.field.github_state_reason'))
+                TextColumn::make('state_reason')
+                    ->label(__('two-way-ticket::two-way-ticket.field.state_reason'))
                     ->toggleable(),
                 TextColumn::make('labels')
                     ->label(__('two-way-ticket::two-way-ticket.field.labels'))
@@ -40,14 +40,14 @@ class TicketsTable
                     ->separator(',')
                     ->sortable()
                     ->toggleable(),
-                // Truncated with a tooltip for the full text — SPEC.md §4 wanted "plus de place
-                // pour le sujet" but an unbounded title was overflowing every other column.
+                // Wraps onto extra lines instead of a fixed truncation — SPEC.md §4 wanted "plus
+                // de place pour le sujet" but an unwrapped title overflowed every other column.
                 TextColumn::make('title')
                     ->label(__('two-way-ticket::two-way-ticket.field.title'))
                     ->searchable()
                     ->weight('medium')
                     ->sortable()
-                    ->limit(60)
+                    ->wrap()
                     ->grow(),
                 TextColumn::make('assignees')
                     ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
@@ -131,7 +131,7 @@ class TicketsTable
                                 ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
                                 ->native(false)
-                                ->options(fn(): array => self::distinctValues('labels'))
+                                ->options(fn(): array => Ticket::distinctValues('labels'))
                                 ->multiple()
                                 ->wrapOptionLabels(false),
                         ])
@@ -147,14 +147,7 @@ class TicketsTable
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.milestone'))
                         ->native(false)
-                        ->options(
-                            fn(): array => Ticket::query()
-                                ->whereNotNull('milestone')
-                                ->distinct()
-                                ->orderBy('milestone')
-                                ->pluck('milestone', 'milestone')
-                                ->all(),
-                        ),
+                        ->options(fn(): array => Ticket::distinctValues('milestone')),
                     Filter::make('projects')
                         ->label(__('two-way-ticket::two-way-ticket.filter.projects'))
                         ->schema([
@@ -162,7 +155,7 @@ class TicketsTable
                                 ->label(__('two-way-ticket::two-way-ticket.filter.projects'))
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.projects'))
                                 ->native(false)
-                                ->options(fn(): array => self::distinctValues('projects'))
+                                ->options(fn(): array => Ticket::distinctValues('projects'))
                                 ->multiple(),
                         ])
                         ->query(fn(Builder $query, array $data): Builder => $query->when(
@@ -198,7 +191,7 @@ class TicketsTable
                                 ->label(__('two-way-ticket::two-way-ticket.filter.assignees'))
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.assignees'))
                                 ->native(false)
-                                ->options(fn(): array => self::distinctValues('assignees'))
+                                ->options(fn(): array => Ticket::distinctValues('assignees'))
                                 ->multiple(),
                         ])
                         ->query(fn(Builder $query, array $data): Builder => $query->when(
@@ -218,11 +211,13 @@ class TicketsTable
                 'xl' => 6,
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                // Icon-only row actions, always — labels here are the quintessence of wasted space.
+                ViewAction::make()->iconButton(),
+                EditAction::make()->iconButton(),
                 Action::make('pushToGithub')
                     ->label(__('two-way-ticket::two-way-ticket.actions.push_to_github'))
                     ->icon('heroicon-o-arrow-up-tray')
+                    ->iconButton()
                     ->color('gray')
                     ->visible(fn(Ticket $record): bool => !$record->isLinked())
                     ->action(function (Ticket $record): void {
@@ -244,24 +239,5 @@ class TicketsTable
                             ->send();
                     }),
             ]);
-    }
-
-    /**
-     * Every distinct value actually present in a multi-value column (labels/assignees/projects)
-     * across all tickets — filter options only ever show what's really in the table; fixed/seed
-     * values (e.g. GitHub's default label catalogue) belong in the create/edit form, not here.
-     *
-     * @return array<string, string>
-     */
-    private static function distinctValues(string $column): array
-    {
-        return Ticket::query()
-            ->whereNotNull($column)
-            ->pluck($column)
-            ->flatMap(fn(array $values): array => $values)
-            ->unique()
-            ->sort()
-            ->mapWithKeys(fn(string $value): array => [$value => $value])
-            ->all();
     }
 }

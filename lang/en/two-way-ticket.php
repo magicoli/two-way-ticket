@@ -46,7 +46,7 @@ return [
         'reported_by' => 'Reported by',
         'reported_at' => 'Reported at',
         'closed_at' => 'Closed at',
-        'github_state_reason' => 'Close reason',
+        'state_reason' => 'Reason',
         'github_issue' => 'GitHub issue',
         'github' => 'GitHub',
         'screenshots' => 'Screenshots',

@@ -83,6 +83,21 @@ class ReportIssue extends Page
     {
         $data = $this->form->getState();
 
+        // Steps are a reporting convenience only, not a stored field — formatted into the
+        // description right here so it round-trips with GitHub with no special-casing at all.
+        $steps = collect($data['steps'] ?? [])
+            ->filter(fn (string $step): bool => $step !== '')
+            ->values();
+        unset($data['steps']);
+
+        if ($steps->isNotEmpty()) {
+            $data['description'] = trim(
+                ($data['description'] ?? '')
+                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps')."\n"
+                .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n"),
+            );
+        }
+
         Ticket::create([
             ...$data,
             'status' => TicketStatus::Open,

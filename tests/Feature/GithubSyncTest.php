@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Http;
 use Magicoli\TwoWayTicket\Actions\CreateGithubIssue;
 use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
+use Magicoli\TwoWayTicket\Actions\UpdateGithubIssue;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -35,6 +36,29 @@ it('pushes a ticket to GitHub with all its labels, assignees, and milestone', fu
         && $request['labels'] === ['bug', 'billing']
         && $request['assignees'] === ['oli']
         && $request['milestone'] === 'v1.1');
+});
+
+it('pushes a linked ticket back onto its GitHub issue, description as the body verbatim', function (): void {
+    // The outgoing half of the sync, fired on every save (EditTicket::afterSave).
+    Http::fake([
+        'api.github.com/repos/example/example/issues/5' => Http::response(['number' => 5]),
+    ]);
+
+    $ticket = Ticket::factory()->linked(5)->closed()->create([
+        'title' => 'Revised title',
+        'description' => "New body\n\nwith line breaks.",
+        'labels' => ['bug'],
+        'assignees' => ['oli'],
+    ]);
+
+    resolve(UpdateGithubIssue::class)->handle($ticket);
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'PATCH'
+        && $request['title'] === 'Revised title'
+        && $request['body'] === "New body\n\nwith line breaks."
+        && $request['labels'] === ['bug']
+        && $request['assignees'] === ['oli']
+        && $request['state'] === 'closed');
 });
 
 it('mirrors a linked ticket status from its real GitHub issue state', function (): void {
@@ -105,7 +129,7 @@ it('keeps state_reason as a verbatim mirror, never turned into a guessed status'
 
     expect($ticket->fresh())
         ->status->toBe(TicketStatus::Closed)
-        ->github_state_reason->toBe('not_planned');
+        ->state_reason->toBe('not_planned');
 });
 
 it('does not re-import an issue that already has a local ticket', function (): void {

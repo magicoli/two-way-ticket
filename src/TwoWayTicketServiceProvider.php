@@ -16,6 +16,8 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
                 'create_tickets_table',
                 'add_github_state_reason_to_tickets_table',
                 'align_tickets_with_github_model',
+                'drop_steps_from_tickets_table',
+                'rename_github_state_reason_to_state_reason',
             ])
             ->hasRoute('api');
     }

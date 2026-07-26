@@ -5,50 +5,69 @@ declare(strict_types=1);
 namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Schemas;
 
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
-use Magicoli\TwoWayTicket\Enums\TicketStatus;
+use Magicoli\TwoWayTicket\Models\Ticket;
 
+/**
+ * Same read-only header as the view page ({@see TicketHeader}), then the editable fields.
+ *
+ * assignees/labels/projects/milestone are NOT free tag inputs: they're picked from fixed lists.
+ * Until each gets its own controlled way to add an option (a label through its own procedure, an
+ * assignee limited to local users allowed to manage tickets AND carrying a linked GitHub
+ * account), the option list is simply the values already present across tickets.
+ *
+ * No steps field: steps are formatted into the description at report time (see ReportIssue), so
+ * the description alone round-trips with GitHub without any special-casing.
+ */
 class TicketForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema->components([
-            Section::make(__('two-way-ticket::two-way-ticket.field.details'))
-                ->schema([
-                    TextInput::make('title')->label(__('two-way-ticket::two-way-ticket.field.title'))->required()->maxLength(255)->columnSpanFull(),
-                    Textarea::make('description')->label(__('two-way-ticket::two-way-ticket.field.description'))->autosize()->columnSpanFull(),
-                    Repeater::make('steps')
-                        ->label(__('two-way-ticket::two-way-ticket.field.steps'))
-                        ->simple(TextInput::make('step')->required())
-                        ->columnSpanFull()
-                        ->addActionLabel(__('two-way-ticket::two-way-ticket.field.add_step')),
-                    Select::make('status')->label(__('two-way-ticket::two-way-ticket.field.status'))->options(TicketStatus::class)->native(false)->required(),
-                    TextInput::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
-                    TagsInput::make('labels')
-                        ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                        ->suggestions(fn (): array => config()->array('two-way-ticket.github.default_labels', []))
-                        ->columnSpanFull(),
-                    TagsInput::make('assignees')->label(__('two-way-ticket::two-way-ticket.field.assignees'))->columnSpanFull(),
-                    TagsInput::make('projects')->label(__('two-way-ticket::two-way-ticket.field.projects'))->columnSpanFull(),
-                ])
-                ->columns(2),
-            Section::make(__('two-way-ticket::two-way-ticket.field.screenshots'))
-                ->schema([
+        return $schema
+            ->columns(3)
+            ->components([
+                TicketHeader::make(),
+                Group::make([
+                    TextInput::make('title')
+                        ->label(__('two-way-ticket::two-way-ticket.field.title'))
+                        ->required()
+                        ->maxLength(255),
+                    Textarea::make('description')
+                        ->label(__('two-way-ticket::two-way-ticket.field.description'))
+                        ->autosize(),
                     FileUpload::make('screenshot_paths')
-                        ->hiddenLabel()
+                        ->label(__('two-way-ticket::two-way-ticket.field.screenshots'))
                         ->image()
                         ->multiple()
                         ->disk(fn () => config()->string('two-way-ticket.screenshots.disk', 'public'))
                         ->directory(fn () => config()->string('two-way-ticket.screenshots.directory', 'two-way-ticket'))
-                        ->maxFiles(fn () => config()->integer('two-way-ticket.screenshots.max_count', 5))
-                        ->columnSpanFull(),
+                        ->maxFiles(fn () => config()->integer('two-way-ticket.screenshots.max_count', 5)),
+                ])->columnSpan(2),
+                Group::make([
+                    Select::make('assignees')
+                        ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
+                        ->options(fn (): array => Ticket::distinctValues('assignees'))
+                        ->multiple()
+                        ->native(false),
+                    Select::make('labels')
+                        ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                        ->options(fn (): array => Ticket::distinctValues('labels'))
+                        ->multiple()
+                        ->native(false),
+                    Select::make('projects')
+                        ->label(__('two-way-ticket::two-way-ticket.field.projects'))
+                        ->options(fn (): array => Ticket::distinctValues('projects'))
+                        ->multiple()
+                        ->native(false),
+                    Select::make('milestone')
+                        ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
+                        ->options(fn (): array => Ticket::distinctValues('milestone'))
+                        ->native(false),
                 ]),
-        ]);
+            ]);
     }
 }

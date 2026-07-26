@@ -75,12 +75,6 @@ final class CreateGithubIssue
 
     private function body(Ticket $ticket): string
     {
-        $steps = collect($ticket->steps ?? [])
-            ->filter(fn (string $step): bool => $step !== '')
-            ->values()
-            ->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)
-            ->implode("\n");
-
         $reporterName = $ticket->user?->getAttribute('name');
         $reporter = is_string($reporterName) && $reporterName !== '' ? $reporterName : (string) __('two-way-ticket::two-way-ticket.issue.unknown_reporter');
 
@@ -91,9 +85,6 @@ final class CreateGithubIssue
         return implode("\n", array_filter([
             $ticket->description,
             $ticket->description !== null ? '' : null,
-            '## '.__('two-way-ticket::two-way-ticket.issue.steps'),
-            $steps !== '' ? $steps : (string) __('two-way-ticket::two-way-ticket.issue.no_steps'),
-            '',
             '**'.__('two-way-ticket::two-way-ticket.issue.reported_by').':** '.$reporter,
             '**'.__('two-way-ticket::two-way-ticket.issue.app_version').':** '.$ticket->app_version,
             $ticket->page_url !== null ? '**'.__('two-way-ticket::two-way-ticket.issue.page_url').':** '.$ticket->page_url : null,

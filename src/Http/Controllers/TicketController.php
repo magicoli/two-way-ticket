@@ -33,10 +33,24 @@ class TicketController extends Controller
 
     public function store(StoreTicketRequest $request): JsonResponse
     {
+        // Steps are a reporting convenience only, not a stored field — formatted into the
+        // description at creation so it round-trips with GitHub with no special-casing.
+        $description = trim((string) $request->input('description', ''));
+        $steps = collect($request->input('steps', []))
+            ->filter(fn (string $step): bool => $step !== '')
+            ->values();
+
+        if ($steps->isNotEmpty()) {
+            $description = trim(
+                $description
+                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps')."\n"
+                .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n"),
+            );
+        }
+
         $ticket = Ticket::create([
             'title' => $request->string('title')->toString(),
-            'description' => $request->input('description'),
-            'steps' => $request->input('steps'),
+            'description' => $description !== '' ? $description : null,
             'status' => TicketStatus::Open,
             'labels' => $request->input('labels', []),
             'assignees' => $request->input('assignees', []),
@@ -61,7 +75,7 @@ class TicketController extends Controller
 
     public function update(UpdateTicketRequest $request, Ticket $ticket): TicketJsonResource
     {
-        $ticket->fill($request->only(['title', 'description', 'steps', 'labels', 'assignees', 'milestone', 'projects']));
+        $ticket->fill($request->only(['title', 'description', 'labels', 'assignees', 'milestone', 'projects']));
 
         if ($request->has('status')) {
             $ticket->status = TicketStatus::from($request->string('status')->toString());

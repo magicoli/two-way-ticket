@@ -81,5 +81,7 @@ abstract class TestCase extends Orchestra
         (include __DIR__.'/../database/migrations/create_tickets_table.php.stub')->up();
         (include __DIR__.'/../database/migrations/add_github_state_reason_to_tickets_table.php.stub')->up();
         (include __DIR__.'/../database/migrations/align_tickets_with_github_model.php.stub')->up();
+        (include __DIR__.'/../database/migrations/drop_steps_from_tickets_table.php.stub')->up();
+        (include __DIR__.'/../database/migrations/rename_github_state_reason_to_state_reason.php.stub')->up();
     }
 }

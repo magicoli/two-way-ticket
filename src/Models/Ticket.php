@@ -15,7 +15,6 @@ use Magicoli\TwoWayTicket\Enums\TicketStatus;
  * @property-read int $id
  * @property string $title
  * @property string|null $description
- * @property array<int, string>|null $steps
  * @property TicketStatus $status
  * @property array<int, string>|null $labels
  * @property string|null $milestone
@@ -27,7 +26,7 @@ use Magicoli\TwoWayTicket\Enums\TicketStatus;
  * @property string $role
  * @property string|null $github_issue_url
  * @property int|null $github_issue_number
- * @property string|null $github_state_reason
+ * @property string|null $state_reason
  * @property \Illuminate\Support\Carbon|null $closed_at
  * @property int|null $user_id
  */
@@ -42,7 +41,6 @@ class Ticket extends Model
     protected $fillable = [
         'title',
         'description',
-        'steps',
         'status',
         'labels',
         'milestone',
@@ -54,7 +52,7 @@ class Ticket extends Model
         'role',
         'github_issue_url',
         'github_issue_number',
-        'github_state_reason',
+        'state_reason',
         'closed_at',
         'user_id',
     ];
@@ -62,7 +60,6 @@ class Ticket extends Model
     protected function casts(): array
     {
         return [
-            'steps' => 'array',
             'labels' => 'array',
             'assignees' => 'array',
             'projects' => 'array',
@@ -92,5 +89,30 @@ class Ticket extends Model
     public function isLinked(): bool
     {
         return $this->github_issue_url !== null;
+    }
+
+    /**
+     * Every distinct value present across all tickets for a column, whether it holds one value
+     * (milestone) or several (labels/assignees/projects). Feeds both the table filters and the
+     * edit form's select lists — until those become properly managed catalogues (a label has to
+     * be created through its own controlled procedure, an assignee has to be a real local user
+     * with a linked GitHub account), the values already in use ARE the option list.
+     *
+     * @return array<string, string>
+     */
+    public static function distinctValues(string $column): array
+    {
+        $values = static::query()->whereNotNull($column)->pluck($column);
+
+        if (new static()->hasCast($column, 'array')) {
+            $values = $values->flatMap(fn (array $columnValues): array => $columnValues);
+        }
+
+        return $values
+            ->filter(fn (?string $value): bool => filled($value))
+            ->unique()
+            ->sort()
+            ->mapWithKeys(fn (string $value): array => [$value => $value])
+            ->all();
     }
 }

@@ -20,8 +20,15 @@ class ReportIssueForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('title')->label(__('two-way-ticket::two-way-ticket.field.title'))->required()->maxLength(255)->columnSpanFull(),
-            Textarea::make('description')->label(__('two-way-ticket::two-way-ticket.field.description'))->autosize()->columnSpanFull(),
+            TextInput::make('title')
+                ->label(__('two-way-ticket::two-way-ticket.field.title'))
+                ->required()
+                ->maxLength(255)
+                ->columnSpanFull(),
+            Textarea::make('description')
+                ->label(__('two-way-ticket::two-way-ticket.field.description'))
+                ->autosize()
+                ->columnSpanFull(),
             Repeater::make('steps')
                 ->label(__('two-way-ticket::two-way-ticket.field.steps'))
                 ->simple(TextInput::make('step')->required())
@@ -31,10 +38,10 @@ class ReportIssueForm
                 ->label(__('two-way-ticket::two-way-ticket.field.screenshots'))
                 ->image()
                 ->multiple()
-                ->disk(fn () => config()->string('two-way-ticket.screenshots.disk', 'public'))
-                ->directory(fn () => config()->string('two-way-ticket.screenshots.directory', 'two-way-ticket'))
-                ->maxFiles(fn () => config()->integer('two-way-ticket.screenshots.max_count', 5))
+                ->disk(fn() => config()->string('two-way-ticket.screenshots.disk', 'public'))
+                ->directory(fn() => config()->string('two-way-ticket.screenshots.directory', 'two-way-ticket'))
+                ->maxFiles(fn() => config()->integer('two-way-ticket.screenshots.max_count', 5))
                 ->columnSpanFull(),
-        ]);
+        ])->inlineLabel();
     }
 }

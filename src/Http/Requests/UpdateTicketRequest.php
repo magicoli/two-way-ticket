@@ -24,8 +24,6 @@ class UpdateTicketRequest extends FormRequest
         return [
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
-            'steps' => ['sometimes', 'nullable', 'array'],
-            'steps.*' => ['string'],
             'labels' => ['sometimes', 'array'],
             'labels.*' => ['string'],
             'assignees' => ['sometimes', 'array'],

@@ -145,7 +145,7 @@ final class SyncGithubIssues
         $assignees = self::names($issue['assignees'] ?? [], 'login');
 
         $unchanged = $ticket->status === $newStatus
-            && $ticket->github_state_reason === $stateReason
+            && $ticket->state_reason === $stateReason
             && $ticket->assignees === $assignees
             && (($ticket->closed_at === null && $closedAt === null)
                 || ($ticket->closed_at !== null && $closedAt !== null && $ticket->closed_at->equalTo($closedAt)));
@@ -156,7 +156,7 @@ final class SyncGithubIssues
 
         $ticket->status = $newStatus;
         $ticket->closed_at = $closedAt;
-        $ticket->github_state_reason = $stateReason;
+        $ticket->state_reason = $stateReason;
         $ticket->assignees = $assignees;
 
         if ($save) {
