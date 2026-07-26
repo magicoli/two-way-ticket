@@ -98,9 +98,9 @@ class TicketsTable
                             Select::make('values')
                                 ->label(__('two-way-ticket::two-way-ticket.filter.status'))
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.status'))
+                                ->native(false)
                                 ->options(TicketStatus::class)
                                 ->multiple()
-                                ->native(false)
                                 ->wrapOptionLabels(false),
                         ])
                         ->query(fn(Builder $query, array $data): Builder => $query->when(
@@ -110,6 +110,7 @@ class TicketsTable
                     SelectFilter::make('priority')
                         ->label(__('two-way-ticket::two-way-ticket.field.priority'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.priority'))
+                        ->native(false)
                         ->options(TicketPriority::class),
                     Filter::make('labels')
                         ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
@@ -117,9 +118,9 @@ class TicketsTable
                             Select::make('values')
                                 ->label(__('two-way-ticket::two-way-ticket.filter.labels'))
                                 ->placeholder(__('two-way-ticket::two-way-ticket.filter.labels'))
+                                ->native(false)
                                 ->options(fn(): array => self::distinctLabelOptions())
                                 ->multiple()
-                                ->native(false)
                                 ->wrapOptionLabels(false),
                         ])
                         ->query(fn(Builder $query, array $data): Builder => $query->when(
@@ -133,6 +134,7 @@ class TicketsTable
                     SelectFilter::make('milestone')
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.milestone'))
+                        ->native(false)
                         ->options(
                             fn(): array => Ticket::query()
                                 ->whereNotNull('milestone')
@@ -144,6 +146,7 @@ class TicketsTable
                     SelectFilter::make('app_version')
                         ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.app_version'))
+                        ->native(false)
                         ->options(
                             fn(): array => Ticket::query()
                                 ->whereNotNull('app_version')
@@ -156,6 +159,7 @@ class TicketsTable
                     SelectFilter::make('user')
                         ->label(__('two-way-ticket::two-way-ticket.field.reported_by'))
                         ->placeholder(__('two-way-ticket::two-way-ticket.filter.user'))
+                        ->native(false)
                         ->relationship('user', 'name'),
                 ],
                 layout: FiltersLayout::AboveContent,
