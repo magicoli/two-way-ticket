@@ -49,6 +49,48 @@ it('submits a report with only the minimal reporter-facing fields', function ():
     expect($ticket->user_id)->toBe($user->id);
 });
 
+it('composes the description once from the structured fields, in English, path only', function (): void {
+    // Oli, 2026-07-26: "on formate la description en fonction des champs structurés du formulaire
+    // (pas de titre pour les champs vides)". English because it lands on GitHub; the page is
+    // reduced to its path since the host may be private or local.
+    config()->set('two-way-ticket.app_version', '2.0.0');
+    $user = User::create(['name' => 'Reporter', 'email' => 'reporter@example.test']);
+
+    app()->setLocale('fr');
+
+    Livewire::actingAs($user)
+        ->withQueryParams(['from' => 'https://private.internal.test/admin/tickets?tab=closed'])
+        ->test(ReportIssue::class)
+        ->fillForm([
+            'title' => 'Composed',
+            'description' => 'It breaks.',
+            'steps' => [['step' => 'Open it'], ['step' => 'Look']],
+        ])
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    app()->setLocale('en');
+
+    expect(Ticket::query()->where('title', 'Composed')->value('description'))->toBe(
+        "It breaks.\n\n".
+        "## Steps to reproduce\n1. Open it\n2. Look\n\n".
+        "**App version:** 2.0.0\n**Page:** `/admin/tickets`",
+    );
+});
+
+it('gives an empty section no heading at all', function (): void {
+    $user = User::create(['name' => 'Reporter', 'email' => 'reporter@example.test']);
+    config()->set('two-way-ticket.app_version', '');
+
+    Livewire::actingAs($user)
+        ->test(ReportIssue::class)
+        ->fillForm(['title' => 'Bare', 'description' => 'Just this.'])
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    expect(Ticket::query()->where('title', 'Bare')->value('description'))->toBe('Just this.');
+});
+
 it('lets the reporter clear the pre-filled page and pick labels', function (): void {
     // Oli, 2026-07-26: the page URL is pre-filled but editable "si le problème est générique et
     // pas lié spécifiquement à la page depuis laquelle on a cliqué".

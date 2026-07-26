@@ -92,6 +92,47 @@ class Ticket extends Model
     }
 
     /**
+     * Builds the description ONCE, at creation, out of the structured fields the reporting form
+     * collects. From then on the description is an ordinary field: edited by hand, synced both
+     * ways with GitHub, and never regenerated — which is what lets it round-trip verbatim.
+     *
+     * Written in English because it ends up on GitHub, and a section whose field is empty gets
+     * no heading at all. The page is reduced to its PATH: the host may be a private or local
+     * install, so a full URL tells a GitHub reader nothing and leaks an internal address.
+     *
+     * @param  list<string>  $steps
+     */
+    public static function composeDescription(
+        ?string $description,
+        array $steps = [],
+        ?string $pageUrl = null,
+        ?string $appVersion = null,
+    ): ?string {
+        $steps = collect($steps)->filter(fn (string $step): bool => trim($step) !== '')->values();
+        $path = filled($pageUrl) ? parse_url($pageUrl, PHP_URL_PATH) : null;
+
+        $details = collect([
+            filled($appVersion)
+                ? '**'.__('two-way-ticket::two-way-ticket.issue.app_version', [], 'en').':** '.$appVersion
+                : null,
+            filled($path)
+                ? '**'.__('two-way-ticket::two-way-ticket.issue.page_url', [], 'en').':** `'.$path.'`'
+                : null,
+        ])->filter();
+
+        $composed = collect([
+            filled($description) ? trim($description) : null,
+            $steps->isNotEmpty()
+                ? '## '.__('two-way-ticket::two-way-ticket.issue.steps', [], 'en')."\n"
+                    .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n")
+                : null,
+            $details->isNotEmpty() ? $details->implode("\n") : null,
+        ])->filter()->implode("\n\n");
+
+        return $composed !== '' ? $composed : null;
+    }
+
+    /**
      * The label catalogue offered when filing: GitHub's standard set (config `default_labels`)
      * merged with whatever is already in use here, so a brand-new install still offers real
      * choices and a label added later never disappears from the list.

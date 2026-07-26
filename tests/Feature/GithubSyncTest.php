@@ -61,9 +61,9 @@ it('pushes a linked ticket back onto its GitHub issue, description as the body v
         && $request['state'] === 'closed');
 });
 
-it('writes the issue body in English whatever the reporter\'s own language', function (): void {
-    // Oli, 2026-07-26: "Le formattage github doit être en anglais dans tous les cas, peu importe
-    // la langue de l'utilisateur" — this text lands on GitHub, read by whoever passes by.
+it('pushes the description verbatim, never regenerating a body', function (): void {
+    // Once created, the description is an ordinary two-way-synced field. Regenerating anything
+    // at push time would drift the moment either side edits it.
     Http::fake([
         'api.github.com/repos/example/example/issues' => Http::response([
             'html_url' => 'https://github.com/example/example/issues/50',
@@ -71,31 +71,33 @@ it('writes the issue body in English whatever the reporter\'s own language', fun
         ], 201),
     ]);
 
-    app()->setLocale('fr');
-
     $ticket = Ticket::factory()->create([
-        'title' => 'Quelque chose casse',
-        'description' => 'La page plante.',
+        'description' => "Edited by hand.\n\nStill mine.",
         'app_version' => '1.2.3',
         'page_url' => 'https://private.internal.test/admin/tickets?tab=closed',
     ]);
 
     resolve(CreateGithubIssue::class)->handle($ticket);
 
-    Http::assertSent(function ($request) use ($ticket): bool {
-        return str_contains($request['body'], '**App version:** 1.2.3')
-            && ! str_contains($request['body'], "Version de l'app")
-            // Path only: the host may be private or local, so the full URL is useless to a
-            // GitHub reader and leaks an internal address.
-            && str_contains($request['body'], '**Page:** `/admin/tickets`')
-            && ! str_contains($request['body'], 'private.internal.test')
-            // No reporter line, no "created from ticket #N" footer — that id is a LOCAL one and
-            // reads as a GitHub issue number next to a real issue.
-            && ! str_contains($request['body'], 'Reported by')
-            && ! str_contains($request['body'], '#'.$ticket->id);
-    });
+    Http::assertSent(fn ($request): bool => $request['body'] === "Edited by hand.\n\nStill mine.");
+});
 
-    app()->setLocale('en');
+it('mirrors a description edited on GitHub', function (): void {
+    $ticket = Ticket::factory()->linked(32)->create(['description' => 'Original']);
+
+    Http::fake([
+        'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]]),
+        'api.github.com/repos/example/example/issues/32' => Http::response([
+            'number' => 32,
+            'state' => 'open',
+            'body' => 'Rewritten on GitHub',
+        ]),
+        'api.github.com/repos/example/example/issues*' => Http::response([]),
+    ]);
+
+    resolve(SyncGithubIssues::class)->handle();
+
+    expect($ticket->fresh())->description->toBe('Rewritten on GitHub');
 });
 
 it('mirrors a linked ticket status from its real GitHub issue state', function (): void {

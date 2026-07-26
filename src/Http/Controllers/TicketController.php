@@ -33,33 +33,27 @@ class TicketController extends Controller
 
     public function store(StoreTicketRequest $request): JsonResponse
     {
-        // Steps are a reporting convenience only, not a stored field — formatted into the
-        // description at creation so it round-trips with GitHub with no special-casing.
-        $description = trim((string) $request->input('description', ''));
-        $steps = collect($request->input('steps', []))
-            ->filter(fn (string $step): bool => $step !== '')
-            ->values();
-
-        if ($steps->isNotEmpty()) {
-            $description = trim(
-                $description
-                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps', [], 'en')."\n"
-                .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n"),
-            );
-        }
+        // Captured automatically — never accepted as free-form user input for what's meant to
+        // record where the ticket was actually filed from (SPEC.md §3).
+        $pageUrl = $request->string('page_url')->toString() ?: $request->headers->get('referer');
+        $appVersion = $request->string('app_version')->toString() ?: Ticket::reportingAppVersion();
 
         $ticket = Ticket::create([
             'title' => $request->string('title')->toString(),
-            'description' => $description !== '' ? $description : null,
+            // Composed once here, from the structured fields; an ordinary field from then on.
+            'description' => Ticket::composeDescription(
+                $request->input('description'),
+                $request->input('steps', []),
+                $pageUrl,
+                $appVersion,
+            ),
             'status' => TicketStatus::Open,
             'labels' => $request->input('labels', []),
             'assignees' => $request->input('assignees', []),
             'milestone' => $request->input('milestone'),
             'projects' => $request->input('projects', []),
-            // Captured automatically — never accepted as free-form user input for what's meant
-            // to record where the ticket was actually filed from (SPEC.md §3).
-            'page_url' => $request->string('page_url')->toString() ?: $request->headers->get('referer'),
-            'app_version' => $request->string('app_version')->toString() ?: Ticket::reportingAppVersion(),
+            'page_url' => $pageUrl,
+            'app_version' => $appVersion,
             'role' => $request->string('role')->toString(),
         ]);
 

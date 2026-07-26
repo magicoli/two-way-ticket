@@ -196,11 +196,10 @@ final class SyncGithubIssues
      */
     private function importIssue(array $issue, ?array $projects): void
     {
-        // title/labels/milestone aren't listed here because applyIssueState() sets them, one line
-        // below, for imports and updates alike — it owns every GitHub-mirrored field so there's a
-        // single place to look. They ARE synced; they're just not set twice.
+        // title/description/labels/milestone aren't listed here because applyIssueState() sets
+        // them, one line below, for imports and updates alike — it owns every GitHub-mirrored
+        // field so there's a single place to look. They ARE synced; they're just not set twice.
         $ticket = new Ticket([
-            'description' => (string) ($issue['body'] ?? ''),
             'app_version' => '',
             'role' => 'GitHub',
             'github_issue_url' => (string) $issue['html_url'],
@@ -230,6 +229,7 @@ final class SyncGithubIssues
         // Keeps the current title if the payload somehow carries none — mirroring must never
         // blank a field just because a key was missing.
         $title = (string) ($issue['title'] ?? $ticket->title ?? '');
+        $description = array_key_exists('body', $issue) ? (string) $issue['body'] : $ticket->description;
         $newStatus = $issue['state'] === 'closed' ? TicketStatus::Closed : TicketStatus::Open;
         $closedAt = $newStatus === TicketStatus::Closed
             ? CarbonImmutable::parse((string) ($issue['closed_at'] ?? 'now'))
@@ -244,6 +244,7 @@ final class SyncGithubIssues
             : ($projects[(int) $issue['number']] ?? []);
 
         $unchanged = $ticket->title === $title
+            && $ticket->description === $description
             && $ticket->status === $newStatus
             && $ticket->state_reason === $stateReason
             && $ticket->labels === $labels
@@ -258,6 +259,7 @@ final class SyncGithubIssues
         }
 
         $ticket->title = $title;
+        $ticket->description = $description;
         $ticket->status = $newStatus;
         $ticket->closed_at = $closedAt;
         $ticket->state_reason = $stateReason;

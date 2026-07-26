@@ -58,7 +58,10 @@ final class CreateGithubIssue
 
         $payload = [
             'title' => $titlePrefix.$ticket->title,
-            'body' => $this->body($ticket),
+            // The description verbatim, never regenerated: it was composed once at creation
+            // (Ticket::composeDescription) and is a plain, two-way-synced field from then on.
+            // Generating anything here would drift the moment either side edits it.
+            'body' => (string) $ticket->description,
             'labels' => (array) $ticket->labels,
         ];
 
@@ -73,31 +76,4 @@ final class CreateGithubIssue
         return $payload;
     }
 
-    /**
-     * Always English, whatever the reporter's own interface language: this text lands on GitHub,
-     * read by whoever passes by, not by the user who filed it.
-     *
-     * No reporter line — GitHub already attributes the issue to whoever opened it, and locally
-     * it's right there in the ticket header. No "created from ticket #N" footer either: that
-     * number is a LOCAL id, and next to a GitHub issue everyone reads it as an issue number.
-     */
-    private function body(Ticket $ticket): string
-    {
-        $page = $ticket->page_url !== null
-            // Path only — the host can be a private or local install, so the full URL says
-            // nothing useful to a GitHub reader and may leak an internal address.
-            ? parse_url($ticket->page_url, PHP_URL_PATH)
-            : null;
-
-        return implode("\n", array_filter([
-            $ticket->description,
-            $ticket->description !== null ? '' : null,
-            filled($ticket->app_version)
-                ? '**'.__('two-way-ticket::two-way-ticket.issue.app_version', [], 'en').':** '.$ticket->app_version
-                : null,
-            filled($page)
-                ? '**'.__('two-way-ticket::two-way-ticket.issue.page_url', [], 'en').':** `'.$page.'`'
-                : null,
-        ], fn (?string $line): bool => $line !== null));
-    }
 }

@@ -85,28 +85,21 @@ class ReportIssue extends Page
     {
         $data = $this->form->getState();
 
-        // Steps are a reporting convenience only, not a stored field — formatted into the
-        // description right here so it round-trips with GitHub with no special-casing at all.
-        $steps = collect($data['steps'] ?? [])
-            ->filter(fn (string $step): bool => $step !== '')
-            ->values();
+        // page_url comes from the form, so a cleared field really means "not about a specific
+        // page" instead of being silently overwritten with the referring URL.
+        $pageUrl = filled($data['page_url'] ?? null) ? $data['page_url'] : null;
+        $appVersion = Ticket::reportingAppVersion();
+        // Steps are a reporting convenience, not a stored field: they're folded into the
+        // description here, once, and it's an ordinary field from then on.
+        $steps = $data['steps'] ?? [];
         unset($data['steps']);
-
-        if ($steps->isNotEmpty()) {
-            $data['description'] = trim(
-                ($data['description'] ?? '')
-                ."\n\n## ".__('two-way-ticket::two-way-ticket.issue.steps', [], 'en')."\n"
-                .$steps->map(fn (string $step, int $index): string => ($index + 1).'. '.$step)->implode("\n"),
-            );
-        }
 
         Ticket::create([
             ...$data,
+            'description' => Ticket::composeDescription($data['description'] ?? null, $steps, $pageUrl, $appVersion),
             'status' => TicketStatus::Open,
-            'app_version' => Ticket::reportingAppVersion(),
-            // page_url comes from the form now, so a cleared field really means "not about a
-            // specific page" instead of being silently overwritten with the referring URL.
-            'page_url' => filled($data['page_url'] ?? null) ? $data['page_url'] : null,
+            'app_version' => $appVersion,
+            'page_url' => $pageUrl,
             'user_id' => Filament::auth()->id(),
         ]);
 
