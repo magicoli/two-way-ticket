@@ -80,6 +80,7 @@ return [
     ],
 
     'actions' => [
+        'save' => 'Save',
         'assign' => 'Assign',
         'replace_existing' => 'Replace existing values',
         'close' => 'Close',

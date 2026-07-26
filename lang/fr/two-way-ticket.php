@@ -80,6 +80,7 @@ return [
     ],
 
     'actions' => [
+        'save' => 'Sauvegarder',
         'assign' => 'Assigner',
         'replace_existing' => 'Remplacer les valeurs existantes',
         'close' => 'Clôturer',

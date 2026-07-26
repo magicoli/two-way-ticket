@@ -80,6 +80,7 @@ return [
     ],
 
     'actions' => [
+        'save' => 'Opslaan',
         'assign' => 'Toewijzen',
         'replace_existing' => 'Bestaande waarden vervangen',
         'close' => 'Sluiten',

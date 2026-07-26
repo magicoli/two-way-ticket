@@ -27,19 +27,25 @@ class EditTicket extends EditRecord
     /** All buttons grouped together at the top — never the Laravel-default top/bottom split. */
     protected function getHeaderActions(): array
     {
-        // Explicit labels: Filament derives an action's label from its NAME, which never goes
-        // through translations — these reuse its own panel strings, already localised.
+        // Destructive first, primary last: with Delete sitting on the right it was the button
+        // the eye and the cursor went to, exactly the reflex the top/bottom split was meant to
+        // avoid in the first place.
+        //
+        // Labels are explicit because Filament derives an action's label from its NAME, which
+        // never goes through translations. Save uses the package's own string rather than
+        // Filament's edit-record one, which reads "Save changes" / "Sauvegarder les
+        // modifications" — needlessly long for a header button.
         return [
-            Action::make('save')
-                ->label(__('filament-panels::resources/pages/edit-record.form.actions.save.label'))
-                ->action('save')
-                ->keyBindings(['mod+s']),
-            ViewAction::make(),
+            DeleteAction::make(),
             Action::make('cancel')
                 ->label(__('filament-panels::resources/pages/edit-record.form.actions.cancel.label'))
                 ->color('gray')
                 ->url(static::getResource()::getUrl('index')),
-            DeleteAction::make(),
+            ViewAction::make(),
+            Action::make('save')
+                ->label(__('two-way-ticket::two-way-ticket.actions.save'))
+                ->action('save')
+                ->keyBindings(['mod+s']),
         ];
     }
 
