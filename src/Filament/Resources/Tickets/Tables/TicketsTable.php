@@ -13,9 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
-use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
@@ -67,28 +65,36 @@ class TicketsTable
                     ->sortable()
                     ->wrap()
                     ->toggleable(),
-                // Wraps onto extra lines instead of a fixed truncation — SPEC.md §4 wanted "plus
-                // de place pour le sujet" but an unwrapped title overflowed every other column.
-                // The page sits UNDER the title rather than in its own column: as a column it ate
-                // width for what is, most of the time, a secondary detail.
-                Stack::make([
-                    TextColumn::make('title')
-                        ->label(__('two-way-ticket::two-way-ticket.field.title'))
-                        ->searchable()
-                        ->weight('medium')
-                        ->sortable()
-                        ->wrap(),
-                    TextColumn::make('page_url')
-                        ->label(__('two-way-ticket::two-way-ticket.field.page_url'))
-                        ->url(fn (Ticket $record): ?string => $record->page_url)
-                        // Path shown, full URL linked — same trade-off as the header.
-                        ->formatStateUsing(fn (?string $state): ?string => filled($state)
-                            ? (parse_url($state, PHP_URL_PATH) ?: $state)
-                            : null)
-                        ->color('gray')
-                        ->size(TextSize::Small)
-                        ->searchable(),
-                ])->grow(),
+                // Title, wrapped rather than truncated (SPEC.md §4 wanted "plus de place pour le
+                // sujet"), with the page path UNDER it — as its own column the URL ate width for
+                // what is usually a secondary detail.
+                //
+                // Same trick as status/reason above: an array state renders one line per value
+                // while the column keeps its own sortable header. A top-level Stack would lay it
+                // out too, but it switches the whole table into Filament's header-less card mode,
+                // costing EVERY column its header — and with it, sorting.
+                TextColumn::make('title')
+                    ->label(__('two-way-ticket::two-way-ticket.field.title'))
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->grow()
+                    ->state(fn (Ticket $record): array => array_values(array_filter([
+                        $record->title,
+                        filled($record->page_url)
+                            ? (parse_url($record->page_url, PHP_URL_PATH) ?: $record->page_url)
+                            : null,
+                    ])))
+                    // Path shown, full URL linked — same trade-off as the view header.
+                    ->url(fn (string $state, Ticket $record): ?string => $state === $record->title
+                        ? null
+                        : $record->page_url)
+                    ->color(fn (string $state, Ticket $record): string => $state === $record->title
+                        ? ''
+                        : 'gray')
+                    ->weight(fn (string $state, Ticket $record): ?string => $state === $record->title
+                        ? 'medium'
+                        : null),
                 TextColumn::make('assignees')
                     ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
                     ->badge()

@@ -31,20 +31,25 @@ it('hides closed tickets by default, showing them via the Closed/All tabs', func
         ->assertCanSeeTableRecords([$open, $closed]);
 });
 
-it('shows the page path under the title, without costing a column', function (): void {
-    // Oli, 2026-07-26: as its own column the URL ate width for a secondary detail. Stacked under
-    // the title instead — and stacking must not cost the other columns their sortable headers.
+it('shows the page path under the title, without costing the table its headers', function (): void {
+    // Oli, 2026-07-26: as its own column the URL ate width for a secondary detail. Grouped with
+    // the title instead — but a top-level Stack drops the table into Filament's header-less card
+    // mode, so EVERY column loses its header and its sorting. Asserting on the header row itself
+    // rather than on the label text, which also appears in the column-toggle menu (a first
+    // attempt at this test passed while the header row was in fact gone).
     $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
     Ticket::factory()->create([
         'title' => 'Something broke',
         'page_url' => 'https://private.internal.test/admin/tickets?tab=closed',
     ]);
 
-    Livewire::actingAs($user)
-        ->test(ListTickets::class)
-        ->assertSee('/admin/tickets')
-        ->assertSee('Title')
-        ->assertSee('Milestone');
+    $html = Livewire::actingAs($user)->test(ListTickets::class)->html();
+
+    expect($html)
+        ->toContain('/admin/tickets')
+        // The full URL stays clickable even though only the path is shown.
+        ->toContain('https://private.internal.test/admin/tickets?tab=closed')
+        ->toContain('fi-ta-header-cell');
 });
 
 it('shows status and reason as two separate badges in one column', function (): void {
