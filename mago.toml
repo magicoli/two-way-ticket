@@ -1,14 +1,5 @@
 #:schema https://mago.carthage.software/1.30.0/schema.json
 version = "1"
 
-# The one thing this file is here for. With no configuration Mago assumes the newest PHP it knows
-# and rewrites code to match: it turned `(new static())->foo()` back into `new static()->foo()` on
-# save, which parses only from 8.4 — quietly raising the floor of a package meant to install in
-# other people's apps. Pinning the version stops that at the source.
-#
 # Keep in step with composer.json's `php` constraint.
 php-version = "8.3.0"
-
-# Nothing else on purpose. No formatter preset and no source paths: both make Mago want to
-# reformat the whole package (25+ files) instead of leaving it as it is. With just the version
-# pinned, `mago format` reports every file already formatted.
