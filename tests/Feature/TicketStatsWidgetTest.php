@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\ListTickets;
-use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStats;
+use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
 use Magicoli\TwoWayTicket\Models\Ticket;
 use Magicoli\TwoWayTicket\Tests\Fixtures\User;
 
@@ -15,7 +15,7 @@ function statsFor(array $query = []): array
 {
     app()->instance('request', Request::create('/admin/tickets', 'GET', $query));
 
-    return (fn () => $this->getStats())->call(new TicketStats);
+    return (fn () => $this->getStats())->call(new TicketStatsWidget);
 }
 
 function statValues(array $query = []): array
@@ -83,7 +83,7 @@ it('widens to everything when the active stat is clicked again, Open included', 
 it('renders inside the page request, or the highlight can never move', function (): void {
     // A lazy widget loads in a second request that carries none of the page's query string, so
     // request()->query('view') came back empty every time and the active stat stayed put.
-    expect(TicketStats::isLazy())->toBeFalse();
+    expect(TicketStatsWidget::isLazy())->toBeFalse();
 });
 
 it('marks the active stat with more than a colour', function (): void {
@@ -100,5 +100,5 @@ it('marks the active stat with more than a colour', function (): void {
 
 it('is registered above the list', function (): void {
     expect((fn () => $this->getHeaderWidgets())->call(new ListTickets))
-        ->toContain(TicketStats::class);
+        ->toContain(TicketStatsWidget::class);
 });

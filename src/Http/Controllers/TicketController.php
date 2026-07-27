@@ -57,7 +57,7 @@ class TicketController extends Controller
             'role' => $request->string('role')->toString(),
         ]);
 
-        return new TicketJsonResource($ticket)
+        return (new TicketJsonResource($ticket))
             ->response()
             ->setStatusCode(201);
     }

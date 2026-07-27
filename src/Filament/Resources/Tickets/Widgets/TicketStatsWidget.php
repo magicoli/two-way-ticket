@@ -24,7 +24,7 @@ use Magicoli\TwoWayTicket\Models\Ticket;
  * The active one is coloured while the others go gray, and its card is tinted by the host app
  * through `twt-stat-active` — a caption saying "showing" was too quiet to notice.
  */
-class TicketStats extends StatsOverviewWidget
+class TicketStatsWidget extends StatsOverviewWidget
 {
     /**
      * NOT lazy, and that's the whole reason the highlight works: a lazy widget renders in a

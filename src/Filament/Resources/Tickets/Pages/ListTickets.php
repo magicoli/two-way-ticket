@@ -15,7 +15,7 @@ use Livewire\Attributes\Url;
 use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\TicketResource;
-use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStats;
+use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
 
 class ListTickets extends ListRecords
 {
@@ -35,7 +35,7 @@ class ListTickets extends ListRecords
      */
     protected function getHeaderWidgets(): array
     {
-        return [TicketStats::class];
+        return [TicketStatsWidget::class];
     }
 
     /**

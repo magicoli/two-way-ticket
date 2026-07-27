@@ -186,7 +186,9 @@ class Ticket extends Model
     {
         $values = static::query()->whereNotNull($column)->pluck($column);
 
-        if (new static()->hasCast($column, 'array')) {
+        // Parenthesised on purpose: chaining straight off `new` is PHP 8.4 syntax, and the only
+        // thing in this package that ever demanded 8.4 (see composer.json's own note).
+        if ((new static())->hasCast($column, 'array')) {
             $values = $values->flatMap(fn (array $columnValues): array => $columnValues);
         }
 

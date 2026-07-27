@@ -47,11 +47,20 @@ The migrations run straight from the package — nothing to publish, and no copi
 drift from ours. Publish them only if you want to own and edit them:
 `php artisan vendor:publish --tag=two-way-ticket-migrations`.
 
-Optional: publish translations (only needed to override the wording or add locales for your app; the package's own translations (en/fr/nl) load on their own.)
+Then register the plugins: `TicketsPlugin::make()` on an admin panel, `ReportIssuePlugin::make()`
+wherever people should be able to report. That is the whole integration.
+
+Everything below is optional — for overriding, never to make the package work. Its translations
+(en/fr/nl) and its stylesheet both load on their own.
 
 ```bash
 php artisan vendor:publish --tag=two-way-ticket-translations
+php artisan vendor:publish --tag=two-way-ticket-styles
 ```
+
+`TicketStatsWidget` is a plain Filament widget, so it can go on a dashboard too — add it to a
+panel's `->widgets([...])`. Its counters link to the ticket list, so put it on a panel where
+`TicketsPlugin` is registered.
 
 
 Set in `.env`:

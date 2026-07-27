@@ -55,5 +55,13 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
             [Css::make('two-way-ticket', __DIR__.'/../resources/css/two-way-ticket.css')],
             package: 'magicoli/two-way-ticket',
         );
+
+        // Publishable for the same reason the translations are: to be OVERRIDDEN, never to make
+        // the package work. Nothing needs publishing for the styling to apply — this is only for
+        // a host that wants to restyle these pages and keep its version under its own control.
+        $this->publishes(
+            [__DIR__.'/../resources/css' => resource_path('css/vendor/two-way-ticket')],
+            'two-way-ticket-styles',
+        );
     }
 }
