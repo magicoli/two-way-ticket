@@ -26,6 +26,7 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
                 '2026_07_26_015613_align_tickets_with_github_model',
                 '2026_07_26_120228_drop_steps_from_tickets_table',
                 '2026_07_26_120229_rename_github_state_reason_to_state_reason',
+                '2026_07_27_040000_default_tickets_app_version',
             ])
             ->hasRoute('api');
     }

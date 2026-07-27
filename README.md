@@ -46,7 +46,7 @@ composer require magicoli/two-way-ticket
 php artisan migrate
 ```
 
-Then, in the panel provider of an admin panel:
+Then, in your admin panel provider:
 
 ```php
 use Magicoli\TwoWayTicket\ReportIssuePlugin;
@@ -59,12 +59,7 @@ $panel
     ])
 ```
 
-`TicketsPlugin` registers a Filament resource, so give it a panel **without tenancy**: Filament
-scopes resources to the current tenant whether they ask for it or not, and a ticket belongs to no
-tenant. On a tenant-scoped panel it fails at render.
-
-`ReportIssuePlugin` has no such constraint — add it on its own to every other panel where people
-should be able to report, and they never need access to the backlog they report into:
+And in any other panel where people should be able to report:
 
 ```php
 use Magicoli\TwoWayTicket\ReportIssuePlugin;
@@ -75,7 +70,34 @@ $panel
     ])
 ```
 
-### Optional
+That's it.
+
+## GitHub token
+
+Create a **classic** personal access token at
+[github.com/settings/tokens/new](https://github.com/settings/tokens/new) and put it in
+`TWO_WAY_TICKET_GITHUB_TOKEN`.
+
+| Scope | Needed for | Without it |
+|---|---|---|
+| `repo` | Reading, creating and updating issues | Nothing works — sync and push both fail |
+| `project` | Reading the Projects (v2) an issue belongs to | Everything else keeps working; the `projects` field is simply left as-is |
+
+`project` is genuinely optional: Projects (v2) exist only in GitHub's GraphQL API, and a token
+without that scope gets an `INSUFFICIENT_SCOPES` error back. The sync treats that as *unknown*
+rather than *empty*, so it never wipes stored values and never fails the run — you just don't get
+project data.
+
+**Fine-grained tokens** work too and are the better choice if you want to restrict access to a
+single repository: give them *Issues: Read and write* (plus *Projects: Read-only* if you want
+project sync). Note that a fine-grained token's Projects permission lives on the **organisation or
+user account**, not the repository, so scoping it to one repo doesn't restrict project visibility.
+
+Deploy keys are **not** an option here: they authenticate git transport (clone/push over SSH) and
+give no access to the issues API at all. Same for SSH keys in general — the REST and GraphQL APIs
+only accept tokens.
+
+## Optional
 
 Everything below is optional — for overriding, never to make the package work. Its translations
 (en/fr/nl) and its stylesheet both load on their own.
@@ -105,30 +127,16 @@ TWO_WAY_TICKET_GITHUB_REPOSITORY=owner/repo
 Only the API token matters for a local-only tracker. Without the two GitHub values, everything
 works except pushing and syncing, which say so plainly rather than failing quietly.
 
-## GitHub token
+## Multi-tenant apps
 
-Create a **classic** personal access token at
-[github.com/settings/tokens/new](https://github.com/settings/tokens/new) and put it in
-`TWO_WAY_TICKET_GITHUB_TOKEN`.
+Only relevant if your app uses Filament tenancy, and then only for `TicketsPlugin`.
 
-| Scope | Needed for | Without it |
-|---|---|---|
-| `repo` | Reading, creating and updating issues | Nothing works — sync and push both fail |
-| `project` | Reading the Projects (v2) an issue belongs to | Everything else keeps working; the `projects` field is simply left as-is |
+Give it a panel **without** tenancy — which is where you would put it anyway: tickets are global,
+and an admin does not expect one backlog per tenant. Filament scopes a resource to the current
+tenant whether the resource asks for it or not, so on a tenant-scoped panel the ticket list fails
+at render rather than simply showing everything.
 
-`project` is genuinely optional: Projects (v2) exist only in GitHub's GraphQL API, and a token
-without that scope gets an `INSUFFICIENT_SCOPES` error back. The sync treats that as *unknown*
-rather than *empty*, so it never wipes stored values and never fails the run — you just don't get
-project data.
-
-**Fine-grained tokens** work too and are the better choice if you want to restrict access to a
-single repository: give them *Issues: Read and write* (plus *Projects: Read-only* if you want
-project sync). Note that a fine-grained token's Projects permission lives on the **organisation or
-user account**, not the repository, so scoping it to one repo doesn't restrict project visibility.
-
-Deploy keys are **not** an option here: they authenticate git transport (clone/push over SSH) and
-give no access to the issues API at all. Same for SSH keys in general — the REST and GraphQL APIs
-only accept tokens.
+`ReportIssuePlugin` is unaffected and can go anywhere.
 
 ## License
 

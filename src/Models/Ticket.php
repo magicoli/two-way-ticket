@@ -75,6 +75,26 @@ class Ticket extends Model
     }
 
     /**
+     * Stamps the build a ticket was reported on, wherever it is created from.
+     *
+     * Left to each call site, this got forgotten: the API set it and the GitHub import set it, but
+     * the Filament create page did not, and creating a ticket from the UI died on a NOT NULL
+     * violation. Filling it here means no future call site has to remember either.
+     *
+     * The test is whether the attribute was SET, not whether it is empty: the import deliberately
+     * stores an empty string, because an issue opened on GitHub came from no build of ours and
+     * must not be labelled with one.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $ticket): void {
+            if (! array_key_exists('app_version', $ticket->getAttributes())) {
+                $ticket->app_version = static::reportingAppVersion();
+            }
+        });
+    }
+
+    /**
      * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo

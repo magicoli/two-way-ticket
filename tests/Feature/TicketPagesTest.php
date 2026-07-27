@@ -48,6 +48,34 @@ it('renders the create page, where there is no record for the header to describe
     Livewire::actingAs($user)->test(CreateTicket::class)->assertOk();
 });
 
+it('actually creates a ticket from the create page, stamping the build it was reported on', function (): void {
+    // Oli, 2026-07-27, hit on the very first ticket filed in a second host app: rendering the page
+    // was covered, submitting it was not. app_version is NOT NULL and no form field sets it, so
+    // "Create" died on an integrity constraint — the API and the GitHub import each set it, the
+    // one path a human uses did not.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    config()->set('two-way-ticket.app_version', '2.3.4');
+
+    Livewire::actingAs($user)->test(CreateTicket::class)
+        ->fillForm(['title' => 'Confirm it works'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $ticket = Ticket::query()->where('title', 'Confirm it works')->sole();
+
+    expect($ticket->app_version)->toBe('2.3.4');
+});
+
+it('leaves app_version alone when it is set on purpose, empty included', function (): void {
+    // The GitHub import stores an empty string deliberately: an issue opened on GitHub came from
+    // no build of ours. The creating hook must not "helpfully" overwrite that.
+    config()->set('two-way-ticket.app_version', '2.3.4');
+
+    $imported = Ticket::create(['title' => 'From GitHub', 'app_version' => '']);
+
+    expect($imported->app_version)->toBe('');
+});
+
 it('orders dates the way the reader\'s locale does, never month-first outside en', function (): void {
     // Oli, 2026-07-26, absolute rule: "juil. 25, 2026" n'a AUCUN sens pour un francophone, le
     // mois vient APRES le jour. Carbon's isoFormat is what actually respects that; Filament's
