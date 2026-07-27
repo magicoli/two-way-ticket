@@ -66,6 +66,21 @@ it('actually creates a ticket from the create page, stamping the build it was re
     expect($ticket->app_version)->toBe('2.3.4');
 });
 
+it('offers the running build as the version, and takes another one if it is given', function (): void {
+    // Oli, 2026-07-27: an admin also files tickets for requests that arrived by phone or e-mail,
+    // which carry no version, or someone else's. Pre-filled is right, imposed is not.
+    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    config()->set('two-way-ticket.app_version', '2.3.4');
+
+    Livewire::actingAs($user)->test(CreateTicket::class)
+        ->assertFormSet(['app_version' => '2.3.4'])
+        ->fillForm(['title' => 'Reported by phone', 'app_version' => '1.9.0'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Ticket::query()->where('title', 'Reported by phone')->sole()->app_version)->toBe('1.9.0');
+});
+
 it('leaves app_version alone when it is set on purpose, empty included', function (): void {
     // The GitHub import stores an empty string deliberately: an issue opened on GitHub came from
     // no build of ours. The creating hook must not "helpfully" overwrite that.

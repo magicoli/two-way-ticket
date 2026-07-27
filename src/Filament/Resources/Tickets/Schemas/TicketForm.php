@@ -72,6 +72,14 @@ class TicketForm
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                         ->options(fn(): array => Ticket::distinctValues('milestone'))
                         ->native(false),
+                    // Pre-filled with the running build, because that is what it is nine times out
+                    // of ten, but editable and clearable: an admin filing a request that arrived
+                    // by phone or e-mail has either no version or someone else's (Oli, 2026-07-27).
+                    // Left empty it stays empty — the model only fills in what was never set.
+                    TextInput::make('app_version')
+                        ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
+                        ->default(fn(): string => Ticket::reportingAppVersion())
+                        ->maxLength(255),
                 ]),
             ]);
     }
