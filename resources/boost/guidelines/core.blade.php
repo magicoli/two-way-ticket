@@ -19,6 +19,12 @@ A ticket has exactly the fields a GitHub issue has: title, description, status (
 
 Check `?status=open` periodically for newly reported items and handle them like a bug reported in conversation.
 
+### Never set `assignees`
+
+Assigning is a human act with a meaning in the workflow: an assigned ticket is one somebody has taken up. Filing a ticket with an assignee — including assigning it to whoever you are acting for — falsely marks it as under way.
+
+Leave the field empty, always, unless you are explicitly told to set it. It takes GitHub user ids, nothing else.
+
 ### Never write `#n` for a ticket
 
 Ticket ids and GitHub issue numbers are **different numbers** — ticket 82 is not issue 82, and most tickets have no issue at all. GitHub turns any `#n` it finds in an issue body or comment into a link to *its* issue n, so a `#82` written here silently points at an unrelated issue the day the ticket is promoted.
