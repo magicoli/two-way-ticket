@@ -46,8 +46,34 @@ composer require magicoli/two-way-ticket
 php artisan migrate
 ```
 
-Then register the plugins: `TicketsPlugin::make()` on an admin panel, `ReportIssuePlugin::make()`
-wherever people should be able to report. That is the whole integration.
+Then, in the panel provider of an admin panel:
+
+```php
+use Magicoli\TwoWayTicket\ReportIssuePlugin;
+use Magicoli\TwoWayTicket\TicketsPlugin;
+
+$panel
+    ->plugins([
+        TicketsPlugin::make(),
+        ReportIssuePlugin::make(),
+    ])
+```
+
+`TicketsPlugin` registers a Filament resource, so give it a panel **without tenancy**: Filament
+scopes resources to the current tenant whether they ask for it or not, and a ticket belongs to no
+tenant. On a tenant-scoped panel it fails at render.
+
+`ReportIssuePlugin` has no such constraint — add it on its own to every other panel where people
+should be able to report, and they never need access to the backlog they report into:
+
+```php
+use Magicoli\TwoWayTicket\ReportIssuePlugin;
+
+$panel
+    ->plugins([
+        ReportIssuePlugin::make(),
+    ])
+```
 
 ### Optional
 
