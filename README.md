@@ -70,7 +70,7 @@ $panel
     ])
 ```
 
-That's it.
+That's it. (see visibility overrides below)
 
 ### AI guidelines
 

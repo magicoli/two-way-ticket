@@ -98,6 +98,9 @@ abstract class TestCase extends Orchestra
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password')->nullable();
+            // Not what a host app necessarily has — it is here so the policy's `is_admin` branch
+            // can be exercised by a fixture that carries the attribute and nothing else.
+            $table->boolean('is_admin')->nullable();
             $table->timestamps();
         });
 
