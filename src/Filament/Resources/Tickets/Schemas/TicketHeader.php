@@ -33,47 +33,47 @@ class TicketHeader
     public static function make(): Flex
     {
         return Flex::make([
-            TextEntry::make('status')
-                ->hiddenLabel()
-                ->badge()
-                ->size(TextSize::Large)
-                ->grow(false),
+            TextEntry::make('status')->hiddenLabel()->badge()->size(TextSize::Large)->grow(false),
             TextEntry::make('state_reason')
                 ->hiddenLabel()
                 ->badge()
                 ->color('gray')
-                ->visible(fn (?Ticket $record): bool => filled($record?->state_reason))
+                ->visible(fn(?Ticket $record): bool => filled($record?->state_reason))
                 ->grow(false),
             TextEntry::make('app_version')
                 ->hiddenLabel()
                 ->badge()
                 ->color('gray')
-                ->visible(fn (?Ticket $record): bool => filled($record?->app_version))
+                ->visible(fn(?Ticket $record): bool => filled($record?->app_version))
                 ->grow(false),
             TextEntry::make('created_at')
                 ->hiddenLabel()
-                ->state(fn (?Ticket $record): string => $record instanceof Ticket ? self::summary($record) : '')
+                ->state(fn(?Ticket $record): string => $record instanceof Ticket ? self::summary($record) : '')
                 ->grow(false),
             // Shows the path, links to the whole URL: the full address is long and mostly noise
             // in a header line that's fighting for width, but it still has to be clickable.
             TextEntry::make('page_url')
                 ->hiddenLabel()
-                ->url(fn (?Ticket $record): ?string => $record?->page_url)
-                ->formatStateUsing(fn (?string $state): ?string => filled($state)
-                    ? (parse_url($state, PHP_URL_PATH) ?: $state)
-                    : null)
-                ->visible(fn (?Ticket $record): bool => filled($record?->page_url))
+                ->url(fn(?Ticket $record): ?string => $record?->page_url)
+                ->formatStateUsing(fn(?string $state): ?string => (
+                    filled($state) ? (parse_url($state, PHP_URL_PATH) ?: $state) : null
+                ))
+                ->visible(fn(?Ticket $record): bool => filled($record?->page_url))
                 ->grow(false),
             TextEntry::make('github_issue_url')
                 ->hiddenLabel()
                 ->badge()
-                ->url(fn (?Ticket $record): ?string => $record?->github_issue_url)
+                ->url(fn(?Ticket $record): ?string => $record?->github_issue_url)
                 ->openUrlInNewTab()
-                ->formatStateUsing(fn (?string $state, ?Ticket $record): string => __('two-way-ticket::two-way-ticket.field.github').' #'.$record?->github_issue_number)
-                ->visible(fn (?Ticket $record): bool => $record?->github_issue_number !== null)
+                ->formatStateUsing(
+                    fn(?string $state, ?Ticket $record): string => (
+                        __('two-way-ticket::two-way-ticket.field.github') . ' #' . $record?->github_issue_number
+                    ),
+                )
+                ->visible(fn(?Ticket $record): bool => $record?->github_issue_number !== null)
                 ->grow(false),
         ])
-            ->visible(fn (?Ticket $record): bool => $record?->exists ?? false)
+            ->visible(fn(?Ticket $record): bool => $record?->exists ?? false)
             ->verticalAlignment(VerticalAlignment::Center)
             ->columnSpanFull();
     }
@@ -88,13 +88,13 @@ class TicketHeader
         $reporter = $record->user?->name;
 
         return collect([
-            filled($reporter)
-                ? __('two-way-ticket::two-way-ticket.issue.reported_by').' '.$reporter
-                : null,
+            filled($reporter) ? __('two-way-ticket::two-way-ticket.issue.reported_by') . ' ' . $reporter : null,
             $record->created_at?->isoFormat('lll'),
             $record->closed_at !== null
-                ? __('two-way-ticket::two-way-ticket.status.closed').' '.$record->closed_at->isoFormat('lll')
+                ? __('two-way-ticket::two-way-ticket.status.closed') . ' ' . $record->closed_at->isoFormat('lll')
                 : null,
-        ])->filter()->implode(' · ');
+        ])
+            ->filter()
+            ->implode(' · ');
     }
 }

@@ -30,9 +30,9 @@ enum TicketStateReason: string implements HasColor, HasLabel
      */
     public static function closingOptions(): array
     {
-        return collect([self::Completed, self::NotPlanned, self::Duplicate])
-            ->mapWithKeys(fn (self $reason): array => [$reason->value => $reason->getLabel()])
-            ->all();
+        return collect([self::Completed, self::NotPlanned, self::Duplicate])->mapWithKeys(fn(self $reason): array => [
+            $reason->value => $reason->getLabel(),
+        ])->all();
     }
 
     /** Readable label for a stored value, or the value itself when GitHub sends something new. */
@@ -47,7 +47,7 @@ enum TicketStateReason: string implements HasColor, HasLabel
 
     public function getLabel(): string
     {
-        return (string) __('two-way-ticket::two-way-ticket.state_reason.'.$this->value);
+        return (string) __('two-way-ticket::two-way-ticket.state_reason.' . $this->value);
     }
 
     public function getColor(): string

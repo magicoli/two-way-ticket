@@ -33,7 +33,11 @@ final class CreateGithubIssue
         $repository = config()->string('two-way-ticket.github.repository', '');
         $token = config()->string('two-way-ticket.github.token', '');
 
-        throw_if($repository === '' || $token === '', RuntimeException::class, (string) __('two-way-ticket::two-way-ticket.issue.not_configured'));
+        throw_if(
+            $repository === '' || $token === '',
+            RuntimeException::class,
+            (string) __('two-way-ticket::two-way-ticket.issue.not_configured'),
+        );
 
         $response = Http::withToken($token)
             ->acceptJson()
@@ -57,7 +61,7 @@ final class CreateGithubIssue
         $titlePrefix = config()->string('two-way-ticket.github.title_prefix', '');
 
         $payload = [
-            'title' => $titlePrefix.$ticket->title,
+            'title' => $titlePrefix . $ticket->title,
             // The description verbatim, never regenerated: it was composed once at creation
             // (Ticket::composeDescription) and is a plain, two-way-synced field from then on.
             // Generating anything here would drift the moment either side edits it.
@@ -75,5 +79,4 @@ final class CreateGithubIssue
 
         return $payload;
     }
-
 }

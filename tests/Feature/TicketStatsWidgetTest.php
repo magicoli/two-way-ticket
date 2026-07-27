@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\ListTickets;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
 use Magicoli\TwoWayTicket\Models\Ticket;
-use Magicoli\TwoWayTicket\Tests\Fixtures\User;
+use Magicoli\TwoWayTicket\Tests\Fixtures\AdminUser;
 
 /**
  * The stats are a Livewire component of their own, so they never appear in the list page's HTML —
@@ -15,21 +15,21 @@ function statsFor(array $query = []): array
 {
     app()->instance('request', Request::create('/admin/tickets', 'GET', $query));
 
-    return (fn () => $this->getStats())->call(new TicketStatsWidget);
+    return (fn() => $this->getStats())->call(new TicketStatsWidget());
 }
 
 function statValues(array $query = []): array
 {
-    return array_map(fn ($stat) => $stat->getValue(), statsFor($query));
+    return array_map(fn($stat) => $stat->getValue(), statsFor($query));
 }
 
 function statUrls(array $query = []): array
 {
-    return array_map(fn ($stat) => $stat->getUrl(), statsFor($query));
+    return array_map(fn($stat) => $stat->getUrl(), statsFor($query));
 }
 
 beforeEach(function (): void {
-    User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
 
     Ticket::factory()->create(['title' => 'Plain open']);
     Ticket::factory()->create(['title' => 'A bug', 'labels' => ['bug']]);
@@ -45,7 +45,9 @@ it('counts open, bugs, in progress and closed', function (): void {
 it('does not count a closed ticket as in progress just because someone was assigned', function (): void {
     // Oli, 2026-07-26, verified in the UI: "assigné une issue fermée, et elle est comptée comme
     // in progress". In progress is a SUBSET of open — a finished ticket isn't in progress.
-    Ticket::factory()->closed()->create(['title' => 'Closed but assigned', 'assignees' => ['oli']]);
+    Ticket::factory()
+        ->closed()
+        ->create(['title' => 'Closed but assigned', 'assignees' => ['oli']]);
 
     expect(statValues()[2])->toBe(1);
 });
@@ -55,29 +57,38 @@ it('links each stat to a tab, the same mechanism the Open/Closed buttons already
     // the clear-selection link.
     $urls = statUrls(['view' => 'all']);
 
-    expect($urls[0])->toContain('view=open')
-        ->and($urls[2])->toContain('view=in_progress')
-        ->and($urls[3])->toContain('view=closed')
+    expect($urls[0])
+        ->toContain('view=open')
+        ->and($urls[2])
+        ->toContain('view=in_progress')
+        ->and($urls[3])
+        ->toContain('view=closed')
         // Only Bugs needs a filter: a label isn't a state, so there's no tab for it.
-        ->and($urls[1])->toContain('filters%5Blabels%5D');
+        ->and($urls[1])
+        ->toContain('filters%5Blabels%5D');
 });
 
 it('highlights the active stat and greys the rest', function (): void {
-    $colours = fn (array $query) => array_map(fn ($stat) => $stat->getColor(), statsFor($query));
+    $colours = fn(array $query) => array_map(fn($stat) => $stat->getColor(), statsFor($query));
 
     // Closed's own colour IS gray, so it's checked through in_progress, whose colour is distinct.
-    expect($colours(['view' => 'in_progress']))->toBe(['gray', 'gray', 'warning', 'gray'])
+    expect($colours(['view' => 'in_progress']))
+        ->toBe(['gray', 'gray', 'warning', 'gray'])
         // Default view is the open tab, so Open is the one lit up.
-        ->and($colours([])[0])->toBe('success');
+        ->and($colours([])[0])
+        ->toBe('success');
 });
 
 it('widens to everything when the active stat is clicked again, Open included', function (): void {
     // Oli, 2026-07-26: "Open est l'affichage par défaut, mais uniquement quand on arrive sur la
     // page. On doit pouvoir le désactiver aussi (pour tout afficher justement)."
-    expect(statUrls(['view' => 'in_progress'])[2])->toContain('view=all')
-        ->and(statUrls(['view' => 'closed'])[3])->toContain('view=all')
+    expect(statUrls(['view' => 'in_progress'])[2])
+        ->toContain('view=all')
+        ->and(statUrls(['view' => 'closed'])[3])
+        ->toContain('view=all')
         // On arrival, Open is the active one, so it offers the way out.
-        ->and(statUrls([])[0])->toContain('view=all');
+        ->and(statUrls([])[0])
+        ->toContain('view=all');
 });
 
 it('renders inside the page request, or the highlight can never move', function (): void {
@@ -89,16 +100,14 @@ it('renders inside the page request, or the highlight can never move', function 
 it('marks the active stat with more than a colour', function (): void {
     // Colour alone can't carry Closed — its own colour IS gray — and the small caption wasn't
     // enough either, so the card itself gets a class the host app tints (see README).
-    $classes = fn (array $query) => array_map(
-        fn ($stat) => $stat->getExtraAttributes()['class'] ?? '',
-        statsFor($query),
-    );
+    $classes = fn(array $query) => array_map(fn($stat) => $stat->getExtraAttributes()['class'] ?? '', statsFor($query));
 
-    expect($classes(['view' => 'closed'])[3])->toBe('twt-stat-active')
-        ->and($classes(['view' => 'closed'])[0])->toBe('');
+    expect($classes(['view' => 'closed'])[3])
+        ->toBe('twt-stat-active')
+        ->and($classes(['view' => 'closed'])[0])
+        ->toBe('');
 });
 
 it('is registered above the list', function (): void {
-    expect((fn () => $this->getHeaderWidgets())->call(new ListTickets))
-        ->toContain(TicketStatsWidget::class);
+    expect((fn() => $this->getHeaderWidgets())->call(new ListTickets()))->toContain(TicketStatsWidget::class);
 });

@@ -72,11 +72,12 @@ it('composes the description once from the structured fields, in English, path o
     app()->setLocale('en');
 
     // A markdown list: single newlines collapse, so plain lines would render as one paragraph.
-    expect(Ticket::query()->where('title', 'Composed')->value('description'))->toBe(
-        "It breaks.\n\n".
-        "## Steps to reproduce\n1. Open it\n2. Look\n\n".
-        "## Details\n- **Version:** 2.0.0\n- **Page:** `/admin/tickets`",
-    );
+    expect(Ticket::query()->where('title', 'Composed')->value('description'))
+        ->toBe(
+            "It breaks.\n\n"
+            . "## Steps to reproduce\n1. Open it\n2. Look\n\n"
+            . "## Details\n- **Version:** 2.0.0\n- **Page:** `/admin/tickets`",
+        );
 });
 
 it('gives an empty section no heading at all', function (): void {

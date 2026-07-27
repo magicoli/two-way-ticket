@@ -52,7 +52,7 @@ class ReportIssueForm
             // first "question" still needs that option to exist.
             Select::make('labels')
                 ->label(__('two-way-ticket::two-way-ticket.field.labels'))
-                ->options(fn (): array => Ticket::labelOptions())
+                ->options(fn(): array => Ticket::labelOptions())
                 ->multiple()
                 ->native(false)
                 ->columnSpanFull(),

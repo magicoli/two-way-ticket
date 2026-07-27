@@ -12,10 +12,11 @@ use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Schema;
+use Livewire\Attributes\Locked;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Schemas\ReportIssueForm;
 use Magicoli\TwoWayTicket\Models\Ticket;
-use Livewire\Attributes\Locked;
+use Magicoli\TwoWayTicket\ReportIssuePlugin;
 
 /**
  * A plain, tenant-agnostic page — deliberately NOT the TicketResource's own CreateRecord page
@@ -28,6 +29,15 @@ use Livewire\Attributes\Locked;
 class ReportIssue extends Page
 {
     protected static bool $shouldRegisterNavigation = false;
+
+    /**
+     * Same answer as the button that leads here — hiding the button while leaving the page open
+     * to anyone who guesses the URL would be no gate at all.
+     */
+    public static function canAccess(): bool
+    {
+        return app(ReportIssuePlugin::class)->canReport(auth()->user());
+    }
 
     /**
      * @var array<string, mixed>|null
@@ -70,14 +80,13 @@ class ReportIssue extends Page
     public function content(Schema $schema): Schema
     {
         return $schema->components([
-            Form::make([EmbeddedSchema::make('form')])
-                ->id('form')
-                ->livewireSubmitHandler('submit')
-                ->footer([
-                    Actions::make([
-                        Action::make('submit')->label(__('two-way-ticket::two-way-ticket.report_issue.submit'))->submit('submit'),
-                    ]),
+            Form::make([EmbeddedSchema::make('form')])->id('form')->livewireSubmitHandler('submit')->footer([
+                Actions::make([
+                    Action::make('submit')
+                        ->label(__('two-way-ticket::two-way-ticket.report_issue.submit'))
+                        ->submit('submit'),
                 ]),
+            ]),
         ]);
     }
 

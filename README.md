@@ -94,6 +94,28 @@ Everything Boost writes stays between the `<laravel-boost-guidelines>` markers o
 
 ## Who may report, who may triage
 
+The quick answer is `visible()`, on the two plugins and on the widget, wherever you register them:
+
+```php
+$panel
+    ->plugins([
+        TicketsPlugin::make()->visible(fn (): bool => auth()->user()?->isAdmin() ?? false),
+        ReportIssuePlugin::make()->visible(true),
+    ])
+    ->widgets([
+        TicketStatsWidget::make()->visible(fn (): bool => auth()->user()?->isAdmin() ?? false),
+    ]);
+```
+
+It takes a boolean or a closure. Prefer the closure: the panel is configured once, so a boolean
+computed from the current user would freeze whatever was true at that moment, while a closure is
+asked again every time the answer matters.
+
+Leave it out and the policy below decides — which is what you want unless your rules live
+somewhere the policy cannot reach.
+
+### The default: a Laravel policy
+
 Two different rights, one ordinary Laravel policy on the `Ticket` model — nothing to learn that is
 specific to this package.
 

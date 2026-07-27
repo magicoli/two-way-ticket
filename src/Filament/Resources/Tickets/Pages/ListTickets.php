@@ -65,9 +65,7 @@ class ListTickets extends ListRecords
             'open' => $query->where('status', TicketStatus::Open->value),
             // A subset of open, not a state of its own: a ticket someone was assigned to and
             // which then got closed is finished, not in progress.
-            'in_progress' => $query
-                ->where('status', TicketStatus::Open->value)
-                ->whereJsonLength('assignees', '>', 0),
+            'in_progress' => $query->where('status', TicketStatus::Open->value)->whereJsonLength('assignees', '>', 0),
             'closed' => $query->where('status', TicketStatus::Closed->value),
             default => $query,
         };
@@ -84,7 +82,11 @@ class ListTickets extends ListRecords
                     try {
                         $result = resolve(SyncGithubIssues::class)->handle();
                     } catch (\Throwable $throwable) {
-                        Notification::make()->danger()->title(__('two-way-ticket::two-way-ticket.actions.sync_failed'))->body($throwable->getMessage())->send();
+                        Notification::make()
+                            ->danger()
+                            ->title(__('two-way-ticket::two-way-ticket.actions.sync_failed'))
+                            ->body($throwable->getMessage())
+                            ->send();
 
                         return;
                     }

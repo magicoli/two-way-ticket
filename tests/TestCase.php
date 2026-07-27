@@ -20,14 +20,32 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Schema;
 use Livewire\LivewireServiceProvider;
+use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
+use Magicoli\TwoWayTicket\ReportIssuePlugin;
 use Magicoli\TwoWayTicket\Tests\Fixtures\TestAdminPanelProvider;
 use Magicoli\TwoWayTicket\Tests\Fixtures\TestAppPanelProvider;
 use Magicoli\TwoWayTicket\Tests\Fixtures\User;
+use Magicoli\TwoWayTicket\TicketsPlugin;
 use Magicoli\TwoWayTicket\TwoWayTicketServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
+    /**
+     * `visible()` is remembered on the CLASS, because that is the only place Filament ever looks
+     * ({@see \Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidgetConfiguration}).
+     * A class outlives the application each test rebuilds, so without this one test's override
+     * would silently decide the next test's answer.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        TicketStatsWidget::visibleWhen(null);
+        TicketsPlugin::make()->visible(null);
+        ReportIssuePlugin::make()->visible(null);
+    }
+
     /**
      * @param  Application  $app
      * @return array<int, class-string>
@@ -65,7 +83,7 @@ abstract class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+        $app['config']->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('two-way-ticket.user_model', User::class);
         $app['config']->set('two-way-ticket.api.token', 'test-token');

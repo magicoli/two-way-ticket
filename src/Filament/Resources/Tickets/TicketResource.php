@@ -16,6 +16,8 @@ use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Schemas\TicketForm;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Schemas\TicketInfolist;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Tables\TicketsTable;
 use Magicoli\TwoWayTicket\Models\Ticket;
+use Magicoli\TwoWayTicket\Policies\TicketPolicy;
+use Magicoli\TwoWayTicket\TicketsPlugin;
 
 class TicketResource extends Resource
 {
@@ -24,6 +26,20 @@ class TicketResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
 
     protected static ?string $recordTitleAttribute = 'title';
+
+    /**
+     * A condition set with `TicketsPlugin::make()->visible(...)` wins; without one, the policy
+     * decides ({@see TicketPolicy}).
+     */
+    public static function canAccess(): bool
+    {
+        return TicketsPlugin::isVisible() ?? parent::canAccess();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return TicketsPlugin::isVisible() ?? parent::canViewAny();
+    }
 
     public static function getModelLabel(): string
     {

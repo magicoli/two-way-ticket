@@ -46,9 +46,18 @@ class TicketInfolist
                 Group::make([
                     // Neutral badges: colour here would highlight without distinguishing (see
                     // the same note on the labels column in TicketsTable).
-                    TextEntry::make('assignees')->label(__('two-way-ticket::two-way-ticket.field.assignees'))->badge()->color('gray'),
-                    TextEntry::make('labels')->label(__('two-way-ticket::two-way-ticket.field.labels'))->badge()->color('gray'),
-                    TextEntry::make('projects')->label(__('two-way-ticket::two-way-ticket.field.projects'))->badge()->color('gray'),
+                    TextEntry::make('assignees')
+                        ->label(__('two-way-ticket::two-way-ticket.field.assignees'))
+                        ->badge()
+                        ->color('gray'),
+                    TextEntry::make('labels')
+                        ->label(__('two-way-ticket::two-way-ticket.field.labels'))
+                        ->badge()
+                        ->color('gray'),
+                    TextEntry::make('projects')
+                        ->label(__('two-way-ticket::two-way-ticket.field.projects'))
+                        ->badge()
+                        ->color('gray'),
                     TextEntry::make('milestone')->label(__('two-way-ticket::two-way-ticket.field.milestone')),
                 ]),
             ]);

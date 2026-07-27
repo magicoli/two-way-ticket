@@ -30,6 +30,9 @@ class ReportIssuePlugin implements Plugin
     /** @var (Closure(Authenticatable): bool)|null */
     protected ?Closure $authorizeReportingUsing = null;
 
+    /** @var bool|Closure(): bool|null */
+    protected static bool|Closure|null $isVisible = null;
+
     protected string $renderHookName = PanelsRenderHook::USER_MENU_BEFORE;
 
     public function getId(): string
@@ -65,6 +68,33 @@ class ReportIssuePlugin implements Plugin
     }
 
     /**
+     * Show or hide the report button and its page where the plugin is registered:
+     *
+     *     ReportIssuePlugin::make()->visible($bool)
+     *
+     * Without it, {@see TicketPolicy}'s `create` ability decides. Kept on the class because the
+     * page is asked statically, long after this plugin object was configured.
+     *
+     * Passing null hands the decision back to the policy.
+     *
+     * @param  bool|Closure(): bool|null  $condition
+     */
+    public function visible(bool|Closure|null $condition = true): static
+    {
+        static::$isVisible = $condition;
+
+        return $this;
+    }
+
+    /**
+     * The condition set at registration, or null when the host app set none.
+     */
+    public static function isVisible(): ?bool
+    {
+        return static::$isVisible === null ? null : (bool) value(static::$isVisible);
+    }
+
+    /**
      * Who may report an issue. Default: any authenticated user.
      *
      * @param  Closure(Authenticatable): bool  $callback
@@ -82,8 +112,14 @@ class ReportIssuePlugin implements Plugin
             return false;
         }
 
-        // The policy is the documented way to decide this ({@see TicketPolicy}); the closure stays
-        // supported because it shipped first, and takes precedence when an app set one.
+        // A condition set at registration wins, then the closure (which shipped first), then the
+        // policy — from the most explicit statement of intent to the most general.
+        $visible = static::isVisible();
+
+        if ($visible !== null) {
+            return $visible;
+        }
+
         return $this->authorizeReportingUsing !== null
             ? (bool) ($this->authorizeReportingUsing)($user)
             : Gate::forUser($user)->allows('create', Ticket::class);

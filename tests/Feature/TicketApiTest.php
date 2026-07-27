@@ -17,13 +17,17 @@ it('rejects requests with the wrong token', function (): void {
 });
 
 it('creates a ticket', function (): void {
-    $response = $this->postJson('/api/tickets', [
-        'title' => 'Video export hangs at 90%',
-        'description' => 'Happens on every long video.',
-        'steps' => ['Open a campaign', 'Click "Generate video"'],
-        'labels' => ['bug'],
-        'assignees' => ['oli'],
-    ], withApiToken());
+    $response = $this->postJson(
+        '/api/tickets',
+        [
+            'title' => 'Video export hangs at 90%',
+            'description' => 'Happens on every long video.',
+            'steps' => ['Open a campaign', 'Click "Generate video"'],
+            'labels' => ['bug'],
+            'assignees' => ['oli'],
+        ],
+        withApiToken(),
+    );
 
     $response
         ->assertCreated()
@@ -36,10 +40,14 @@ it('creates a ticket', function (): void {
 });
 
 it('captures page_url from the Referer header when not given explicitly', function (): void {
-    $response = $this->postJson('/api/tickets', ['title' => 'Broken layout'], [
-        ...withApiToken(),
-        'Referer' => 'https://example.test/project/acme/quick-publish',
-    ]);
+    $response = $this->postJson(
+        '/api/tickets',
+        ['title' => 'Broken layout'],
+        [
+            ...withApiToken(),
+            'Referer' => 'https://example.test/project/acme/quick-publish',
+        ],
+    );
 
     $response->assertCreated()->assertJsonPath('data.page_url', 'https://example.test/project/acme/quick-publish');
 });
@@ -87,7 +95,11 @@ it('updates a ticket', function (): void {
     $ticket = Ticket::factory()->create(['title' => 'Original title']);
 
     $this
-        ->patchJson("/api/tickets/{$ticket->id}", ['title' => 'Revised title', 'labels' => ['bug', 'urgent-fix']], withApiToken())
+        ->patchJson(
+            "/api/tickets/{$ticket->id}",
+            ['title' => 'Revised title', 'labels' => ['bug', 'urgent-fix']],
+            withApiToken(),
+        )
         ->assertOk()
         ->assertJsonPath('data.title', 'Revised title');
 
@@ -102,7 +114,5 @@ it('closes a ticket without any GitHub issue at all', function (): void {
         ->assertOk()
         ->assertJsonPath('data.status', 'closed');
 
-    expect($ticket->fresh())
-        ->status->toBe(TicketStatus::Closed)
-        ->closed_at->not->toBeNull();
+    expect($ticket->fresh())->status->toBe(TicketStatus::Closed)->closed_at->not->toBeNull();
 });

@@ -75,9 +75,7 @@ class TicketController extends Controller
 
         if ($request->has('status')) {
             $ticket->status = TicketStatus::from($request->string('status')->toString());
-            $ticket->closed_at = $ticket->status === TicketStatus::Closed
-                ? ($ticket->closed_at ?? now())
-                : null;
+            $ticket->closed_at = $ticket->status === TicketStatus::Closed ? $ticket->closed_at ?? now() : null;
         }
 
         $ticket->save();

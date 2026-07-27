@@ -88,7 +88,7 @@ class Ticket extends Model
     protected static function booted(): void
     {
         static::creating(function (self $ticket): void {
-            if (! array_key_exists('app_version', $ticket->getAttributes())) {
+            if (!array_key_exists('app_version', $ticket->getAttributes())) {
                 $ticket->app_version = static::reportingAppVersion();
             }
         });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets;
 
+use Closure;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Gate;
@@ -34,13 +35,40 @@ class TicketStatsWidget extends StatsOverviewWidget
      */
     protected static bool $isLazy = false;
 
+    /** @var bool|Closure(): bool|null */
+    protected static bool|Closure|null $isVisible = null;
+
     /**
-     * A widget is hidden statically or not at all — Filament decides before any instance exists
-     * ({@see \Filament\Widgets\Concerns\CanAuthorizeAccess}), so there is no ->visible() to call
-     * at registration. Same right as the list it summarises, hence the same policy.
+     * Show or hide it where it is registered:
+     *
+     *     ->widgets([TicketStatsWidget::make()->visible($bool)])
+     *
+     * Kept on the class because Filament asks the class, never the registration
+     * ({@see TicketStatsWidgetConfiguration}).
+     *
+     * Passing null hands the decision back to the policy.
+     *
+     * @param  bool|Closure(): bool|null  $condition
+     */
+    public static function visibleWhen(bool|Closure|null $condition): void
+    {
+        static::$isVisible = $condition;
+    }
+
+    public static function make(array $properties = []): TicketStatsWidgetConfiguration
+    {
+        return new TicketStatsWidgetConfiguration(static::class, $properties);
+    }
+
+    /**
+     * An explicit condition wins; without one, the same right as the list this summarises.
      */
     public static function canView(): bool
     {
+        if (static::$isVisible !== null) {
+            return (bool) value(static::$isVisible);
+        }
+
         return Gate::allows('viewAny', Ticket::class);
     }
 

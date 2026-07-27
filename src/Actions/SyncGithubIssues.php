@@ -35,7 +35,11 @@ final class SyncGithubIssues
         $repository = config()->string('two-way-ticket.github.repository', '');
         $token = config()->string('two-way-ticket.github.token', '');
 
-        throw_if($repository === '' || $token === '', RuntimeException::class, (string) __('two-way-ticket::two-way-ticket.issue.not_configured'));
+        throw_if(
+            $repository === '' || $token === '',
+            RuntimeException::class,
+            (string) __('two-way-ticket::two-way-ticket.issue.not_configured'),
+        );
 
         $projects = $this->fetchProjectsByIssue($repository, $token);
 
@@ -101,7 +105,7 @@ final class SyncGithubIssues
 
             $issues = $response->json('data.repository.issues');
 
-            if (! is_array($issues)) {
+            if (!is_array($issues)) {
                 return null;
             }
 
@@ -239,11 +243,10 @@ final class SyncGithubIssues
         $milestone = $issue['milestone']['title'] ?? null;
         $assignees = self::names($issue['assignees'] ?? [], 'login');
         // null means projects couldn't be read at all — keep whatever is stored rather than wipe it.
-        $newProjects = $projects === null
-            ? $ticket->projects
-            : ($projects[(int) $issue['number']] ?? []);
+        $newProjects = $projects === null ? $ticket->projects : $projects[(int) $issue['number']] ?? [];
 
-        $unchanged = $ticket->title === $title
+        $unchanged =
+            $ticket->title === $title
             && $ticket->description === $description
             && $ticket->status === $newStatus
             && $ticket->state_reason === $stateReason
@@ -251,8 +254,13 @@ final class SyncGithubIssues
             && $ticket->milestone === $milestone
             && $ticket->assignees === $assignees
             && $ticket->projects === $newProjects
-            && (($ticket->closed_at === null && $closedAt === null)
-                || ($ticket->closed_at !== null && $closedAt !== null && $ticket->closed_at->equalTo($closedAt)));
+            && (
+                $ticket->closed_at === null
+                && $closedAt === null
+                || $ticket->closed_at !== null
+                && $closedAt !== null
+                && $ticket->closed_at->equalTo($closedAt)
+            );
 
         if ($unchanged) {
             return false;
@@ -281,6 +289,9 @@ final class SyncGithubIssues
      */
     private static function names(array $items, string $key): array
     {
-        return collect($items)->map(fn (array $item): string => (string) $item[$key])->values()->all();
+        return collect($items)
+            ->map(fn(array $item): string => (string) $item[$key])
+            ->values()
+            ->all();
     }
 }

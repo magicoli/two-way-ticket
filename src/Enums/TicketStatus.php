@@ -22,7 +22,7 @@ enum TicketStatus: string implements HasColor, HasIcon, HasLabel
 
     public function getLabel(): string
     {
-        return (string) __('two-way-ticket::two-way-ticket.status.'.$this->value);
+        return (string) __('two-way-ticket::two-way-ticket.status.' . $this->value);
     }
 
     public function getColor(): string

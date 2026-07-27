@@ -31,11 +31,15 @@ it('pushes a ticket to GitHub with all its labels, assignees, and milestone', fu
         ->github_issue_url->toBe('https://github.com/example/example/issues/42')
         ->github_issue_number->toBe(42);
 
-    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), '/issues')
-        && $request['title'] === 'Real bug'
-        && $request['labels'] === ['bug', 'billing']
-        && $request['assignees'] === ['oli']
-        && $request['milestone'] === 'v1.1');
+    Http::assertSent(
+        fn($request): bool => (
+            str_contains((string) $request->url(), '/issues')
+            && $request['title'] === 'Real bug'
+            && $request['labels'] === ['bug', 'billing']
+            && $request['assignees'] === ['oli']
+            && $request['milestone'] === 'v1.1'
+        ),
+    );
 });
 
 it('pushes a linked ticket back onto its GitHub issue, description as the body verbatim', function (): void {
@@ -44,21 +48,28 @@ it('pushes a linked ticket back onto its GitHub issue, description as the body v
         'api.github.com/repos/example/example/issues/5' => Http::response(['number' => 5]),
     ]);
 
-    $ticket = Ticket::factory()->linked(5)->closed()->create([
-        'title' => 'Revised title',
-        'description' => "New body\n\nwith line breaks.",
-        'labels' => ['bug'],
-        'assignees' => ['oli'],
-    ]);
+    $ticket = Ticket::factory()
+        ->linked(5)
+        ->closed()
+        ->create([
+            'title' => 'Revised title',
+            'description' => "New body\n\nwith line breaks.",
+            'labels' => ['bug'],
+            'assignees' => ['oli'],
+        ]);
 
     resolve(UpdateGithubIssue::class)->handle($ticket);
 
-    Http::assertSent(fn ($request): bool => $request->method() === 'PATCH'
-        && $request['title'] === 'Revised title'
-        && $request['body'] === "New body\n\nwith line breaks."
-        && $request['labels'] === ['bug']
-        && $request['assignees'] === ['oli']
-        && $request['state'] === 'closed');
+    Http::assertSent(
+        fn($request): bool => (
+            $request->method() === 'PATCH'
+            && $request['title'] === 'Revised title'
+            && $request['body'] === "New body\n\nwith line breaks."
+            && $request['labels'] === ['bug']
+            && $request['assignees'] === ['oli']
+            && $request['state'] === 'closed'
+        ),
+    );
 });
 
 it('pushes the description verbatim, never regenerating a body', function (): void {
@@ -79,7 +90,7 @@ it('pushes the description verbatim, never regenerating a body', function (): vo
 
     resolve(CreateGithubIssue::class)->handle($ticket);
 
-    Http::assertSent(fn ($request): bool => $request['body'] === "Edited by hand.\n\nStill mine.");
+    Http::assertSent(fn($request): bool => $request['body'] === "Edited by hand.\n\nStill mine.");
 });
 
 it('mirrors a description edited on GitHub', function (): void {
@@ -166,9 +177,7 @@ it('keeps state_reason as a verbatim mirror, never turned into a guessed status'
 
     resolve(SyncGithubIssues::class)->handle();
 
-    expect($ticket->fresh())
-        ->status->toBe(TicketStatus::Closed)
-        ->state_reason->toBe('not_planned');
+    expect($ticket->fresh())->status->toBe(TicketStatus::Closed)->state_reason->toBe('not_planned');
 });
 
 it('mirrors a title renamed on GitHub', function (): void {
@@ -192,7 +201,9 @@ it('mirrors a title renamed on GitHub', function (): void {
 it('removes locally a label that was removed on GitHub', function (): void {
     // Oli, 2026-07-26: labels deleted on the repo stayed here — the sync mirrored status and
     // assignees but never labels, so they only ever accumulated. Mirroring REPLACES.
-    $ticket = Ticket::factory()->linked(30)->create(['labels' => ['bug', 'wontfix'], 'milestone' => 'v1.0']);
+    $ticket = Ticket::factory()
+        ->linked(30)
+        ->create(['labels' => ['bug', 'wontfix'], 'milestone' => 'v1.0']);
 
     Http::fake([
         'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]]),
@@ -216,13 +227,19 @@ it('syncs GitHub Projects, which only exist in the GraphQL API', function (): vo
     $ticket = Ticket::factory()->linked(20)->create();
 
     Http::fake([
-        'api.github.com/graphql' => Http::response(['data' => ['repository' => ['issues' => [
-            'pageInfo' => ['hasNextPage' => false, 'endCursor' => null],
-            'nodes' => [[
-                'number' => 20,
-                'projectItems' => ['nodes' => [['project' => ['title' => 'Roadmap']]]],
-            ]],
-        ]]]]),
+        'api.github.com/graphql' => Http::response([
+            'data' => [
+                'repository' => [
+                    'issues' => [
+                        'pageInfo' => ['hasNextPage' => false, 'endCursor' => null],
+                        'nodes' => [[
+                            'number' => 20,
+                            'projectItems' => ['nodes' => [['project' => ['title' => 'Roadmap']]]],
+                        ]],
+                    ],
+                ],
+            ],
+        ]),
         'api.github.com/repos/example/example/issues/20' => Http::response(['number' => 20, 'state' => 'open']),
         'api.github.com/repos/example/example/issues*' => Http::response([]),
     ]);
@@ -235,7 +252,9 @@ it('syncs GitHub Projects, which only exist in the GraphQL API', function (): vo
 it('leaves stored projects alone when the token cannot read them, instead of wiping them', function (): void {
     // A token without `read:project` gets a 200 carrying an `errors` array. Treating that as
     // "no projects" would silently clear every ticket's — unknown is not the same as empty.
-    $ticket = Ticket::factory()->linked(21)->create(['projects' => ['Roadmap']]);
+    $ticket = Ticket::factory()
+        ->linked(21)
+        ->create(['projects' => ['Roadmap']]);
 
     Http::fake([
         'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]]),

@@ -5,7 +5,7 @@ use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\CreateTicket;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\EditTicket;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Pages\ViewTicket;
 use Magicoli\TwoWayTicket\Models\Ticket;
-use Magicoli\TwoWayTicket\Tests\Fixtures\User;
+use Magicoli\TwoWayTicket\Tests\Fixtures\AdminUser;
 
 /**
  * Both pages render the same TicketHeader, whose entries resolve closures against the record —
@@ -13,20 +13,23 @@ use Magicoli\TwoWayTicket\Tests\Fixtures\User;
  * was actually rendering these pages in the suite.
  */
 it('renders the view and edit pages for a fully populated ticket', function (): void {
-    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
 
-    $ticket = Ticket::factory()->linked(12)->closed()->create([
-        'title' => 'Everything set',
-        'description' => "A body\n\nwith line breaks.",
-        'labels' => ['bug'],
-        'assignees' => ['oli'],
-        'projects' => ['Roadmap'],
-        'milestone' => 'v1.1',
-        'state_reason' => 'completed',
-        'app_version' => '1.2.3',
-        'page_url' => 'https://example.test/admin/tickets?tab=closed',
-        'user_id' => $user->id,
-    ]);
+    $ticket = Ticket::factory()
+        ->linked(12)
+        ->closed()
+        ->create([
+            'title' => 'Everything set',
+            'description' => "A body\n\nwith line breaks.",
+            'labels' => ['bug'],
+            'assignees' => ['oli'],
+            'projects' => ['Roadmap'],
+            'milestone' => 'v1.1',
+            'state_reason' => 'completed',
+            'app_version' => '1.2.3',
+            'page_url' => 'https://example.test/admin/tickets?tab=closed',
+            'user_id' => $user->id,
+        ]);
 
     // Version and page live in the header now (badge + link), not as labelled fields in the
     // body — the page shows its path, so the header keeps its width.
@@ -43,7 +46,7 @@ it('renders the create page, where there is no record for the header to describe
     // The create page runs the same form schema with a null record, so every TicketHeader closure
     // has to accept one — a non-nullable hint took the whole page down with a TypeError, and
     // nothing here was rendering CreateTicket to catch it.
-    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
 
     Livewire::actingAs($user)->test(CreateTicket::class)->assertOk();
 });
@@ -53,10 +56,11 @@ it('actually creates a ticket from the create page, stamping the build it was re
     // was covered, submitting it was not. app_version is NOT NULL and no form field sets it, so
     // "Create" died on an integrity constraint — the API and the GitHub import each set it, the
     // one path a human uses did not.
-    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
     config()->set('two-way-ticket.app_version', '2.3.4');
 
-    Livewire::actingAs($user)->test(CreateTicket::class)
+    Livewire::actingAs($user)
+        ->test(CreateTicket::class)
         ->fillForm(['title' => 'Confirm it works'])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -69,10 +73,11 @@ it('actually creates a ticket from the create page, stamping the build it was re
 it('offers the running build as the version, and takes another one if it is given', function (): void {
     // Oli, 2026-07-27: an admin also files tickets for requests that arrived by phone or e-mail,
     // which carry no version, or someone else's. Pre-filled is right, imposed is not.
-    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
     config()->set('two-way-ticket.app_version', '2.3.4');
 
-    Livewire::actingAs($user)->test(CreateTicket::class)
+    Livewire::actingAs($user)
+        ->test(CreateTicket::class)
         ->assertFormSet(['app_version' => '2.3.4'])
         ->fillForm(['title' => 'Reported by phone', 'app_version' => '1.9.0'])
         ->call('create')
@@ -96,7 +101,7 @@ it('orders dates the way the reader\'s locale does, never month-first outside en
     // mois vient APRES le jour. Carbon's isoFormat is what actually respects that; Filament's
     // plain ->dateTime() default ('M j, Y H:i:s') does not, it just translates the month name
     // in place and keeps the US ordering.
-    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
 
     $ticket = Ticket::factory()->create([
         'title' => 'Dated',
@@ -115,7 +120,7 @@ it('orders dates the way the reader\'s locale does, never month-first outside en
 
 it('renders both pages for a bare ticket, with every optional header part absent', function (): void {
     // Oli, 2026-07-26: "on n'affiche 'reported by', 'Closed' et 'Github' que si il y a une valeur".
-    $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
 
     $ticket = Ticket::factory()->create(['title' => 'Bare minimum']);
 

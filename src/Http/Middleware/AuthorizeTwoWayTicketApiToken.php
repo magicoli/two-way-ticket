@@ -23,7 +23,7 @@ class AuthorizeTwoWayTicketApiToken
         $configured = (string) config('two-way-ticket.api.token', '');
         $given = (string) $request->bearerToken();
 
-        if ($configured === '' || ! hash_equals($configured, $given)) {
+        if ($configured === '' || !hash_equals($configured, $given)) {
             abort(401, 'Invalid or missing Two-Way Ticket API token.');
         }
 
