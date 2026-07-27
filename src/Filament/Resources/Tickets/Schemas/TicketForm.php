@@ -49,6 +49,19 @@ class TicketForm
                         ->disk(fn() => config()->string('two-way-ticket.screenshots.disk', 'public'))
                         ->directory(fn() => config()->string('two-way-ticket.screenshots.directory', 'two-way-ticket'))
                         ->maxFiles(fn() => config()->integer('two-way-ticket.screenshots.max_count', 5)),
+                    // Part of the report, not of its handling — hence this column and not the
+                    // right-hand one, which mirrors GitHub's own sidebar (assignee, labels,
+                    // projects, milestone) and holds nothing but issue management.
+                    //
+                    // Pre-filled with the running build, because that is what it is nine times out
+                    // of ten, but editable and clearable: an admin filing a request that arrived
+                    // by phone or e-mail has either no version or someone else's (Oli, 2026-07-27).
+                    // Left empty it stays empty — the model only fills in what was never set.
+                    TextInput::make('app_version')
+                        ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
+                        ->default(fn(): string => Ticket::reportingAppVersion())
+                        ->maxLength(255)
+                        ->inlineLabel(),
                 ])->columnSpan(2),
                 Group::make([
                     Select::make('assignees')
@@ -72,14 +85,6 @@ class TicketForm
                         ->label(__('two-way-ticket::two-way-ticket.field.milestone'))
                         ->options(fn(): array => Ticket::distinctValues('milestone'))
                         ->native(false),
-                    // Pre-filled with the running build, because that is what it is nine times out
-                    // of ten, but editable and clearable: an admin filing a request that arrived
-                    // by phone or e-mail has either no version or someone else's (Oli, 2026-07-27).
-                    // Left empty it stays empty — the model only fills in what was never set.
-                    TextInput::make('app_version')
-                        ->label(__('two-way-ticket::two-way-ticket.field.app_version'))
-                        ->default(fn(): string => Ticket::reportingAppVersion())
-                        ->maxLength(255),
                 ]),
             ]);
     }
