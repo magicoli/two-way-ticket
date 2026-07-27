@@ -46,19 +46,21 @@ composer require magicoli/two-way-ticket
 php artisan migrate
 ```
 
-The migrations run straight from the package — nothing to publish, and no copies in your app to
-drift from ours. Publish them only if you want to own and edit them:
-`php artisan vendor:publish --tag=two-way-ticket-migrations`.
-
 Then register the plugins: `TicketsPlugin::make()` on an admin panel, `ReportIssuePlugin::make()`
 wherever people should be able to report. That is the whole integration.
+
+### Optional
 
 Everything below is optional — for overriding, never to make the package work. Its translations
 (en/fr/nl) and its stylesheet both load on their own.
 
+The migrations run straight from the package — nothing to publish, and no copies in your app to
+drift from ours. Publish them only if you want to own and edit them.
+
 ```bash
 php artisan vendor:publish --tag=two-way-ticket-translations
 php artisan vendor:publish --tag=two-way-ticket-styles
+php artisan vendor:publish --tag=two-way-ticket-migrations
 ```
 
 `TicketStatsWidget` is a plain Filament widget, so it can go on a dashboard too — add it to a
