@@ -19,11 +19,11 @@ A ticket has exactly the fields a GitHub issue has: title, description, status (
 
 Check `?status=open` periodically for newly reported items and handle them like a bug reported in conversation.
 
-### Never set `assignees`
+### Never set `assignees` by default
 
-Assigning is a human act with a meaning in the workflow: an assigned ticket is one somebody has taken up. Filing a ticket with an assignee — including assigning it to whoever you are acting for — falsely marks it as under way.
+Assigning carries a meaning in the workflow: an assigned ticket is one somebody has taken up, and it surfaces in the projects currently in progress. So never fill the field when filing a ticket, and never assign it to whoever you are acting for out of politeness — that marks as under way work nobody has started.
 
-Leave the field empty, always, unless you are explicitly told to set it. It takes GitHub user ids, nothing else.
+Assigning when work actually begins is the point of the field: when you start on a ticket, assigning it is the right move. The field takes GitHub user ids, nothing else — not a name, not an email.
 
 ### Never write `#n` for a ticket
 
