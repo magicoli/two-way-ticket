@@ -25,12 +25,25 @@ use Magicoli\TwoWayTicket\Models\Ticket;
 class TicketPolicy
 {
     /**
-     * Reporting an issue. Any authenticated user, which is what a helpdesk is for — an app that
-     * sells support to some members only overrides this one ability.
+     * Reporting an issue, through the "Report an issue" page and its minimal form. Any
+     * authenticated user, which is what a helpdesk is for — an app that sells support to some
+     * members only overrides this one ability.
+     *
+     * Deliberately NOT `create`: the resource's own create screen is the full triage form, with
+     * status, labels, assignees and milestone on it. Someone allowed to report is not thereby
+     * allowed to file straight into the backlog with those set.
+     */
+    public function report(Authenticatable $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * The resource's create screen — a triage form, hence a triage right.
      */
     public function create(Authenticatable $user): bool
     {
-        return true;
+        return $this->triages($user);
     }
 
     public function viewAny(Authenticatable $user): bool

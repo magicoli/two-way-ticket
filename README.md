@@ -119,9 +119,11 @@ somewhere the policy cannot reach.
 Two different rights, one ordinary Laravel policy on the `Ticket` model — nothing to learn that is
 specific to this package.
 
-- **`create`** is reporting an issue. Any authenticated user, by default.
-- **`viewAny`, `view`, `update`, `delete`** are triaging: seeing the whole backlog and acting on
-  it. Administrators, by default.
+- **`report`** is reporting an issue, through the "Report an issue" page and its minimal form.
+  Any authenticated user, by default.
+- **`viewAny`, `view`, `create`, `update`, `delete`** are triaging: seeing the whole backlog and
+  acting on it, the resource's own create screen included — that one is the full form, with
+  status, labels, assignees and milestone on it. Administrators, by default.
 
 "Administrator" has no framework-standard definition, so the shipped policy reads the signals your
 user model probably already carries and stops at the first one it finds: `isAdmin()`,
@@ -152,7 +154,7 @@ name, and for `Magicoli\TwoWayTicket\Models\Ticket` it looks for
 namespace for a model it doesn't own. One line, once, and it wins whatever the boot order.
 
 The list, its pages, the stats widget and the "Report an issue" button all follow, because they
-all ask the policy. Sell support to some members only and you write `create`; open the backlog to
+all ask the policy. Sell support to some members only and you write `report`; open the backlog to
 a support team and you write `viewAny`.
 
 ## GitHub token

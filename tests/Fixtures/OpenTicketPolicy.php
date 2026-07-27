@@ -17,7 +17,7 @@ class OpenTicketPolicy
         return true;
     }
 
-    public function create(Authenticatable $user): bool
+    public function report(Authenticatable $user): bool
     {
         return false;
     }

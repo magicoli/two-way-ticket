@@ -122,7 +122,7 @@ class ReportIssuePlugin implements Plugin
 
         return $this->authorizeReportingUsing !== null
             ? (bool) ($this->authorizeReportingUsing)($user)
-            : Gate::forUser($user)->allows('create', Ticket::class);
+            : Gate::forUser($user)->allows('report', Ticket::class);
     }
 
     protected function renderReportButton(): string

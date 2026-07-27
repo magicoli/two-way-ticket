@@ -47,7 +47,8 @@ it('still lets that user report an issue', function (): void {
 
     $this->actingAs($member);
 
-    expect(Gate::allows('create', Ticket::class))->toBeTrue();
+    expect(Gate::allows('report', Ticket::class))->toBeTrue();
+    expect(TicketResource::canCreate())->toBeFalse();
     $this->get('/admin/report-issue')->assertOk();
 });
 
@@ -68,7 +69,7 @@ it('lets the app replace the default policy', function (): void {
     $this->actingAs($member);
 
     expect(Gate::allows('viewAny', Ticket::class))->toBeTrue();
-    expect(Gate::allows('create', Ticket::class))->toBeFalse();
+    expect(Gate::allows('report', Ticket::class))->toBeFalse();
 });
 
 it('shows or hides the widget from a boolean set where it is registered', function (): void {
@@ -146,9 +147,9 @@ it('lets visible() open the list while the policy still governs the actions', fu
     expect(TicketResource::canEdit($ticket))->toBeFalse();
     expect(TicketResource::canDelete($ticket))->toBeFalse();
 
-    // ...while creating is the REPORTING right, deliberately open — the same right that puts a
-    // "Report an issue" button in front of this user anyway.
-    expect(TicketResource::canCreate())->toBeTrue();
+    // ...and so does creating, because the resource's create screen is the full triage form.
+    // Reporting has its own ability and its own, minimal form.
+    expect(TicketResource::canCreate())->toBeFalse();
 });
 
 it('asks a visible() closure again for every user', function (): void {
