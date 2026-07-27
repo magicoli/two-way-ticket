@@ -38,7 +38,10 @@ instead of on-demand. Both are planned — see [DEVELOPERS.md](DEVELOPERS.md) §
 
 ## Installation
 
+Not on Packagist yet, so point Composer at the repository first:
+
 ```bash
+composer config repositories.two-way-ticket vcs https://github.com/magicoli/two-way-ticket.git
 composer require magicoli/two-way-ticket
 php artisan migrate
 ```

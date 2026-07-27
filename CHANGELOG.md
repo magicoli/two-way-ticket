@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+- update: requires PHP 8.3 instead of 8.4 — nothing here needed 8.4, only two lines of syntax a
+  formatter kept reintroducing; `mago.toml` now pins the version so it stops
+- new: the stylesheet is publishable like the translations, for overriding rather than for making
+  anything work (`--tag=two-way-ticket-styles`)
+- update: `TicketStats` renamed to `TicketStatsWidget`, so every widget carries the suffix; it can
+  be placed on a dashboard, not only above the ticket list
+- fix: the README skipped the `composer config repositories…` step the package cannot be installed
+  without while it is not on Packagist
+
 ## 0.1.0
 - new: local-first ticket tracking for Laravel / Filament — report, triage and close issues inside
   your own app, with a Filament resource for the backlog and a separate "Report an issue" plugin
