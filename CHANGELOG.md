@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+- new: installs on Laravel 12 as well as 13 — Filament v5 already accepted both, only our own
+  `illuminate/contracts` constraint stood in the way; the suite runs green against 12.64 and 13.22
+  with no source change, so upgrading a host app stays a decision of its own
+- update: the README keeps the base install to three commands and moves everything optional under
+  its own heading
+
 ## 0.1.1
 - update: requires PHP 8.3 instead of 8.4 — nothing here needed 8.4, only two lines of syntax a
   formatter kept reintroducing; `mago.toml` now pins the version so it stops
