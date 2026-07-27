@@ -57,9 +57,11 @@ class TicketController extends Controller
             'role' => $request->string('role')->toString(),
         ]);
 
-        return (new TicketJsonResource($ticket))
-            ->response()
-            ->setStatusCode(201);
+        // Same reason as Ticket::distinctValues(): chaining off `new` is 8.4-only syntax, and a
+        // formatter will strip the parentheses that would otherwise keep it 8.3-compatible.
+        $resource = new TicketJsonResource($ticket);
+
+        return $resource->response()->setStatusCode(201);
     }
 
     public function show(Ticket $ticket): TicketJsonResource
