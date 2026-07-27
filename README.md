@@ -110,14 +110,24 @@ This matters more than it looks: Filament delegates resource authorization to po
 a **missing** policy as *allowed*, so a package that ships none puts its backlog in front of
 everyone who can reach the panel — customers included, on a panel that has any.
 
-Your own rules replace ours the usual way, in `AppServiceProvider::boot()`:
+Your own rules replace ours the usual way. Write the policy where you write your others,
+`app/Policies/TicketPolicy.php`, then register it in the `boot()` method of
+`app/Providers/AppServiceProvider.php`:
 
 ```php
 use Illuminate\Support\Facades\Gate;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
-Gate::policy(Ticket::class, \App\Policies\TicketPolicy::class);
+public function boot(): void
+{
+    Gate::policy(Ticket::class, \App\Policies\TicketPolicy::class);
+}
 ```
+
+Registering it is not optional the way it is for your own models: Laravel finds a policy by
+name, and for `Magicoli\TwoWayTicket\Models\Ticket` it looks for
+`Magicoli\TwoWayTicket\Policies\TicketPolicy` — ours. It never looks in your `App\Policies`
+namespace for a model it doesn't own. One line, once, and it wins whatever the boot order.
 
 The list, its pages, the stats widget and the "Report an issue" button all follow, because they
 all ask the policy. Sell support to some members only and you write `create`; open the backlog to
