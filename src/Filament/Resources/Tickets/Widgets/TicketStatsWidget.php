@@ -6,6 +6,7 @@ namespace Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Gate;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\TicketResource;
 use Magicoli\TwoWayTicket\Models\Ticket;
@@ -32,6 +33,16 @@ class TicketStatsWidget extends StatsOverviewWidget
      * request()->query('view') came back empty every time and the active stat never moved.
      */
     protected static bool $isLazy = false;
+
+    /**
+     * A widget is hidden statically or not at all — Filament decides before any instance exists
+     * ({@see \Filament\Widgets\Concerns\CanAuthorizeAccess}), so there is no ->visible() to call
+     * at registration. Same right as the list it summarises, hence the same policy.
+     */
+    public static function canView(): bool
+    {
+        return Gate::allows('viewAny', Ticket::class);
+    }
 
     protected function getStats(): array
     {

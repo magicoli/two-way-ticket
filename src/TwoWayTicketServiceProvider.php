@@ -4,6 +4,9 @@ namespace Magicoli\TwoWayTicket;
 
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
+use Illuminate\Support\Facades\Gate;
+use Magicoli\TwoWayTicket\Models\Ticket;
+use Magicoli\TwoWayTicket\Policies\TicketPolicy;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -42,27 +45,31 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
      */
     public function packageBooted(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../lang', 'two-way-ticket');
+        // Filament treats a missing policy as "allowed", so without this the backlog is open to
+        // anyone who reaches the panel. Registered only when the host app has not registered its
+        // own — guarding on the resolved policy rather than on provider boot order means an app
+        // policy always wins, whichever provider booted first.
+        if (Gate::getPolicyFor(Ticket::class) === null) {
+            Gate::policy(Ticket::class, TicketPolicy::class);
+        }
 
-        $this->publishes(
-            [__DIR__.'/../lang' => lang_path('vendor/two-way-ticket')],
-            'two-way-ticket-translations',
-        );
+        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'two-way-ticket');
+
+        $this->publishes([__DIR__ . '/../lang' => lang_path('vendor/two-way-ticket')], 'two-way-ticket-translations');
 
         // The package's own stylesheet, served by Filament. These pages are generated here, so
         // looking right is this package's job — a host app shouldn't have to add CSS for the
         // selected stat to be visible.
-        FilamentAsset::register(
-            [Css::make('two-way-ticket', __DIR__.'/../resources/css/two-way-ticket.css')],
-            package: 'magicoli/two-way-ticket',
-        );
+        FilamentAsset::register([Css::make(
+            'two-way-ticket',
+            __DIR__ . '/../resources/css/two-way-ticket.css',
+        )], package: 'magicoli/two-way-ticket');
 
         // Publishable for the same reason the translations are: to be OVERRIDDEN, never to make
         // the package work. Nothing needs publishing for the styling to apply — this is only for
         // a host that wants to restyle these pages and keep its version under its own control.
-        $this->publishes(
-            [__DIR__.'/../resources/css' => resource_path('css/vendor/two-way-ticket')],
-            'two-way-ticket-styles',
-        );
+        $this->publishes([
+            __DIR__ . '/../resources/css' => resource_path('css/vendor/two-way-ticket'),
+        ], 'two-way-ticket-styles');
     }
 }

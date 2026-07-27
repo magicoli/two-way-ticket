@@ -92,6 +92,37 @@ replays the stored list, and ours isn't in it yet.
 Everything Boost writes stays between the `<laravel-boost-guidelines>` markers of `CLAUDE.md` and
 `AGENTS.md`, so whatever you keep outside them survives every update.
 
+## Who may report, who may triage
+
+Two different rights, one ordinary Laravel policy on the `Ticket` model — nothing to learn that is
+specific to this package.
+
+- **`create`** is reporting an issue. Any authenticated user, by default.
+- **`viewAny`, `view`, `update`, `delete`** are triaging: seeing the whole backlog and acting on
+  it. Administrators, by default.
+
+"Administrator" has no framework-standard definition, so the shipped policy reads the signals your
+user model probably already carries and stops at the first one it finds: `isAdmin()`,
+`hasRole('admin')` (what spatie/laravel-permission gives you), an `is_admin` attribute, and
+failing all that, the user with id 1.
+
+This matters more than it looks: Filament delegates resource authorization to policies and treats
+a **missing** policy as *allowed*, so a package that ships none puts its backlog in front of
+everyone who can reach the panel — customers included, on a panel that has any.
+
+Your own rules replace ours the usual way, in `AppServiceProvider::boot()`:
+
+```php
+use Illuminate\Support\Facades\Gate;
+use Magicoli\TwoWayTicket\Models\Ticket;
+
+Gate::policy(Ticket::class, \App\Policies\TicketPolicy::class);
+```
+
+The list, its pages, the stats widget and the "Report an issue" button all follow, because they
+all ask the policy. Sell support to some members only and you write `create`; open the backlog to
+a support team and you write `viewAny`.
+
 ## GitHub token
 
 Create a **classic** personal access token at

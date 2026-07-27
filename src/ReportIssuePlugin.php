@@ -10,7 +10,9 @@ use Filament\Panel;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Magicoli\TwoWayTicket\Filament\Pages\ReportIssue;
+use Magicoli\TwoWayTicket\Models\Ticket;
 
 /**
  * Adds the "Report an issue" entry point — attach this to EVERY panel that should let its users
@@ -46,10 +48,7 @@ class ReportIssuePlugin implements Plugin
             ReportIssue::class,
         ]);
 
-        $panel->renderHook(
-            $this->renderHookName,
-            fn (): string => $this->renderReportButton(),
-        );
+        $panel->renderHook($this->renderHookName, fn(): string => $this->renderReportButton());
     }
 
     public function boot(Panel $panel): void
@@ -83,14 +82,16 @@ class ReportIssuePlugin implements Plugin
             return false;
         }
 
+        // The policy is the documented way to decide this ({@see TicketPolicy}); the closure stays
+        // supported because it shipped first, and takes precedence when an app set one.
         return $this->authorizeReportingUsing !== null
             ? (bool) ($this->authorizeReportingUsing)($user)
-            : true;
+            : Gate::forUser($user)->allows('create', Ticket::class);
     }
 
     protected function renderReportButton(): string
     {
-        if (! $this->canReport(auth()->user())) {
+        if (!$this->canReport(auth()->user())) {
             return '';
         }
 
