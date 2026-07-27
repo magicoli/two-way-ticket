@@ -72,6 +72,26 @@ $panel
 
 That's it.
 
+### AI guidelines
+
+The package ships [Laravel Boost](https://github.com/laravel/boost) guidelines, so coding agents
+file what they find here instead of leaving it in a TODO file or in the conversation. Boost never
+pulls in a third-party package's guidelines on its own — deliberately, so a dependency can't grow
+your context behind your back. Tell it once per project:
+
+```bash
+php artisan boost:install          # Laravel 12
+php artisan boost:update --discover # Laravel 13
+```
+
+Both are interactive — tick two-way-ticket in the list they offer. The answer is stored in
+`boost.json`, and from then on a plain `boost:update` keeps the section current on its own.
+Running `boost:update` without `--discover` *before* that first opt-in changes nothing: it
+replays the stored list, and ours isn't in it yet.
+
+Everything Boost writes stays between the `<laravel-boost-guidelines>` markers of `CLAUDE.md` and
+`AGENTS.md`, so whatever you keep outside them survives every update.
+
 ## GitHub token
 
 Create a **classic** personal access token at
