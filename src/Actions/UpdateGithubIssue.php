@@ -60,6 +60,10 @@ final class UpdateGithubIssue
             )
             ->throw();
 
+        // Projects live outside REST entirely: they are reconciled through GraphQL, so the PATCH
+        // above can neither add nor remove one.
+        app(UpdateGithubProjects::class)->handle($ticket);
+
         return $ticket;
     }
 }

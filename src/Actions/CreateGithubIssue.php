@@ -7,6 +7,7 @@ namespace Magicoli\TwoWayTicket\Actions;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 use RuntimeException;
 use Throwable;
@@ -49,6 +50,21 @@ final class CreateGithubIssue
             'github_issue_url' => (string) $response->json('html_url'),
             'github_issue_number' => (int) $response->json('number'),
         ])->save();
+
+        // GitHub's create endpoint takes no state: an issue is always born open. A ticket already
+        // triaged before it was ever pushed would therefore arrive open, and since status belongs
+        // to GitHub once linked, the next sync would reopen it locally — silently undoing the
+        // triage. Delegated rather than repeated here: UpdateGithubIssue already sends the state
+        // and its reason together.
+        if ($ticket->status === TicketStatus::Closed) {
+            app(UpdateGithubIssue::class)->handle($ticket);
+
+            return $ticket;
+        }
+
+        // Projects are not in the payload above because REST does not carry them at all; they are
+        // reconciled through GraphQL. UpdateGithubIssue does it for the closed branch already.
+        app(UpdateGithubProjects::class)->handle($ticket);
 
         return $ticket;
     }

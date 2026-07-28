@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Http;
 use Magicoli\TwoWayTicket\Actions\CreateGithubIssue;
 use Magicoli\TwoWayTicket\Actions\SyncGithubIssues;
 use Magicoli\TwoWayTicket\Actions\UpdateGithubIssue;
+use Magicoli\TwoWayTicket\Actions\UpdateGithubProjects;
 use Magicoli\TwoWayTicket\Enums\TicketStatus;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -293,4 +294,153 @@ it('does not re-import an issue that already has a local ticket', function (): v
 
     expect($result['imported'])->toBe(0);
     expect(Ticket::query()->where('github_issue_number', 99)->count())->toBe(1);
+});
+
+it('closes the issue it just created when the ticket was already closed', function (): void {
+    // GitHub's create endpoint takes no state, so a ticket triaged before it was ever pushed used
+    // to arrive open — and since status belongs to GitHub once linked, the next sync reopened it
+    // locally. Twenty-two tickets went back to open that way, recovered only from a backup.
+    Http::fake([
+        'api.github.com/repos/example/example/issues' => Http::response([
+            'html_url' => 'https://github.com/example/example/issues/7',
+            'number' => 7,
+        ], 201),
+        'api.github.com/repos/example/example/issues/7' => Http::response([], 200),
+    ]);
+
+    $ticket = Ticket::factory()->create([
+        'title' => 'Already triaged',
+        'status' => TicketStatus::Closed,
+        'state_reason' => 'completed',
+    ]);
+
+    resolve(CreateGithubIssue::class)->handle($ticket);
+
+    Http::assertSent(
+        fn($request): bool => (
+            $request->method() === 'PATCH'
+            && str_contains((string) $request->url(), '/issues/7')
+            && $request['state'] === 'closed'
+            && $request['state_reason'] === 'completed'
+        ),
+    );
+});
+
+it('leaves an open ticket open, without a second call', function (): void {
+    Http::fake([
+        'api.github.com/repos/example/example/issues' => Http::response([
+            'html_url' => 'https://github.com/example/example/issues/8',
+            'number' => 8,
+        ], 201),
+    ]);
+
+    $ticket = Ticket::factory()->create(['title' => 'Still open', 'status' => TicketStatus::Open]);
+
+    resolve(CreateGithubIssue::class)->handle($ticket);
+
+    Http::assertSentCount(1);
+});
+
+it('adds the issue to the project the ticket names', function (): void {
+    // Projects (v2) exist only in GraphQL, so REST carries none of this: an issue pushed with a
+    // project set locally arrived with no project at all until this was reconciled separately.
+    Http::fake([
+        'api.github.com/graphql' => Http::sequence()
+            ->push([
+                'data' => [
+                    'repository' => [
+                        'issue' => [
+                            'id' => 'ISSUE_NODE',
+                            'projectItems' => ['nodes' => []],
+                        ],
+                    ],
+                ],
+            ])
+            ->push([
+                'data' => [
+                    'repositoryOwner' => [
+                        'projectsV2' => [
+                            'nodes' => [
+                                ['id' => 'PROJECT_NODE', 'title' => 'Roadmap'],
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->push(['data' => ['addProjectV2ItemById' => ['item' => ['id' => 'ITEM_NODE']]]]),
+    ]);
+
+    $ticket = Ticket::factory()->create([
+        'projects' => ['Roadmap'],
+        'github_issue_url' => 'https://github.com/example/example/issues/7',
+        'github_issue_number' => 7,
+    ]);
+
+    resolve(UpdateGithubProjects::class)->handle($ticket);
+
+    Http::assertSent(
+        fn($request): bool => (
+            str_contains((string) $request->url(), '/graphql')
+            && str_contains((string) ($request['query'] ?? ''), 'addProjectV2ItemById')
+            && $request['variables']['project'] === 'PROJECT_NODE'
+            && $request['variables']['content'] === 'ISSUE_NODE'
+        ),
+    );
+});
+
+it('removes the issue from a project the ticket no longer names', function (): void {
+    Http::fake([
+        'api.github.com/graphql' => Http::sequence()
+            ->push([
+                'data' => [
+                    'repository' => [
+                        'issue' => [
+                            'id' => 'ISSUE_NODE',
+                            'projectItems' => [
+                                'nodes' => [
+                                    ['id' => 'ITEM_NODE', 'project' => ['id' => 'PROJECT_NODE', 'title' => 'Dropped']],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->push(['data' => ['deleteProjectV2Item' => ['deletedItemId' => 'ITEM_NODE']]]),
+    ]);
+
+    // Through an update, the way it actually happens: the project is taken off an existing ticket.
+    $ticket = Ticket::factory()->create([
+        'projects' => ['Dropped'],
+        'github_issue_url' => 'https://github.com/example/example/issues/7',
+        'github_issue_number' => 7,
+    ]);
+
+    $ticket->update(['projects' => []]);
+
+    resolve(UpdateGithubProjects::class)->handle($ticket);
+
+    Http::assertSent(
+        fn($request): bool => (
+            str_contains((string) ($request['query'] ?? ''), 'deleteProjectV2Item')
+            && $request['variables']['item'] === 'ITEM_NODE'
+        ),
+    );
+});
+
+it('never breaks a save when GitHub refuses the projects call', function (): void {
+    // A token without the `project` scope gets a 200 carrying an errors array. The local value
+    // stands and the save goes through — the same way the incoming sync treats unreadable
+    // projects as unknown rather than empty.
+    Http::fake([
+        'api.github.com/graphql' => Http::response(['errors' => [['type' => 'INSUFFICIENT_SCOPES']]], 200),
+    ]);
+
+    $ticket = Ticket::factory()->create([
+        'projects' => ['Roadmap'],
+        'github_issue_url' => 'https://github.com/example/example/issues/7',
+        'github_issue_number' => 7,
+    ]);
+
+    expect(fn() => resolve(UpdateGithubProjects::class)->handle($ticket))->not->toThrow(Throwable::class);
+    expect($ticket->fresh()->projects)->toBe(['Roadmap']);
 });
