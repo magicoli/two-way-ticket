@@ -25,11 +25,16 @@ Assigning carries a meaning in the workflow: an assigned ticket is one somebody 
 
 Assigning when work actually begins is the point of the field: when you start on a ticket, assigning it is the right move. The field takes GitHub user ids, nothing else — not a name, not an email.
 
-### Never write `#n` for a ticket
+### Two numbers, two sigils
 
-Ticket ids and GitHub issue numbers are **different numbers** — ticket 82 is not issue 82, and most tickets have no issue at all. GitHub turns any `#n` it finds in an issue body or comment into a link to *its* issue n, so a `#82` written here silently points at an unrelated issue the day the ticket is promoted.
+A ticket id and a GitHub issue number are **different numbers** — ticket 82 is not issue 82, and most tickets have no issue at all. GitHub turns any `#n` it finds in an issue body or comment into a link to *its* issue n, so a `#82` meant for a ticket silently points at an unrelated issue.
 
-Write **`ticket 82`**, never `#82`, in every title, description and comment. `#n` is reserved for real GitHub issue numbers — in commit messages, where `Fix #123` is meant to close issue 123.
+- **`°82`** — a local ticket.
+- **`#88`** — a GitHub issue; `owner/repo#88` when it lives in another repository.
+
+**Once a ticket has an issue, only the issue number is ever spoken.** The local id stops existing — in conversation, descriptions, comments and commit messages alike. One number, no lookup, nothing to disambiguate.
+
+`°` is not reachable on every keyboard. **`twt-82`** is the fallback for writing a local reference without it. There is no third form: a ticket that has no issue needs no cross-reference machinery, and anything more elaborate belongs on GitHub — which is what GitHub is for.
 
 ### Status belongs to GitHub
 
