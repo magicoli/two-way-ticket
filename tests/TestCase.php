@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Schema;
 use Livewire\LivewireServiceProvider;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
 use Magicoli\TwoWayTicket\ReportIssuePlugin;
-use Magicoli\TwoWayTicket\Tests\Fixtures\TestAdminPanelProvider;
+use Magicoli\TwoWayTicket\Tests\Fixtures\TestAppPanelProvider;
 use Magicoli\TwoWayTicket\Tests\Fixtures\TestAppPanelProvider;
 use Magicoli\TwoWayTicket\Tests\Fixtures\User;
 use Magicoli\TwoWayTicket\TicketsPlugin;
@@ -73,7 +73,7 @@ abstract class TestCase extends Orchestra
             WidgetsServiceProvider::class,
             FilamentServiceProvider::class,
             TwoWayTicketServiceProvider::class,
-            TestAdminPanelProvider::class,
+            TestAppPanelProvider::class,
             TestAppPanelProvider::class,
         ];
     }
