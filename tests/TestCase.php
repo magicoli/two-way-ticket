@@ -23,7 +23,6 @@ use Livewire\LivewireServiceProvider;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
 use Magicoli\TwoWayTicket\ReportIssuePlugin;
 use Magicoli\TwoWayTicket\Tests\Fixtures\TestAppPanelProvider;
-use Magicoli\TwoWayTicket\Tests\Fixtures\TestAppPanelProvider;
 use Magicoli\TwoWayTicket\Tests\Fixtures\User;
 use Magicoli\TwoWayTicket\TicketsPlugin;
 use Magicoli\TwoWayTicket\TwoWayTicketServiceProvider;

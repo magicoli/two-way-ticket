@@ -86,6 +86,26 @@ it('offers the running build as the version, and takes another one if it is give
     expect(Ticket::query()->where('title', 'Reported by phone')->sole()->app_version)->toBe('1.9.0');
 });
 
+it('saves an edited ticket whose version is empty, instead of dying on the constraint', function (): void {
+    // Oli, 2026-08-02: could not edit ANY ticket — "NOT NULL constraint failed:
+    // tickets.app_version". Creating one and bulk-editing labels were fine, because neither
+    // writes this attribute; only the edit form exposes it, and an emptied TextInput dehydrates
+    // to null rather than ''. Tickets imported from GitHub, or filed through the API without a
+    // version, all carry an empty string — so this was every ticket whose origin was not the UI.
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+    $ticket = Ticket::create(['title' => 'Filed elsewhere', 'description' => 'x', 'app_version' => '']);
+
+    Livewire::actingAs($user)
+        ->test(EditTicket::class, ['record' => $ticket->id])
+        ->fillForm(['description' => 'edited'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($ticket->fresh())
+        ->description->toBe('edited')
+        ->app_version->toBe('');
+});
+
 it('leaves app_version alone when it is set on purpose, empty included', function (): void {
     // The GitHub import stores an empty string deliberately: an issue opened on GitHub came from
     // no build of ours. The creating hook must not "helpfully" overwrite that.

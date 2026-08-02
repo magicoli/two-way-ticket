@@ -92,6 +92,22 @@ class Ticket extends Model
                 $ticket->app_version = static::reportingAppVersion();
             }
         });
+
+        // "No version" is a real state — a GitHub import, a report phoned in — and the column
+        // holds it as an empty string, NOT NULL. But the edit form exposes app_version as a
+        // deliberately clearable TextInput, and an emptied text input dehydrates to null rather
+        // than '', so saving any ticket whose version was blank died on the constraint (Oli,
+        // 2026-08-02: could not edit a ticket at all; creating one and bulk-editing labels were
+        // fine, because neither of those writes this attribute).
+        //
+        // Normalised on the model, not on the form field: the form is simply the writer that
+        // happened to expose it, and the API, the GitHub sync and whatever comes next deserve
+        // the same guarantee without having to remember it.
+        static::saving(function (self $ticket): void {
+            if ($ticket->app_version === null) {
+                $ticket->app_version = '';
+            }
+        });
     }
 
     /**
