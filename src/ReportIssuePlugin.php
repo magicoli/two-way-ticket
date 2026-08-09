@@ -6,10 +6,10 @@ namespace Magicoli\TwoWayTicket;
 
 use Closure;
 use Filament\Contracts\Plugin;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Magicoli\TwoWayTicket\Filament\Pages\ReportIssue;
 use Magicoli\TwoWayTicket\Models\Ticket;
@@ -125,21 +125,27 @@ class ReportIssuePlugin implements Plugin
             : Gate::forUser($user)->allows('report', Ticket::class);
     }
 
+    /**
+     * Through NavigationItemsPlugin::VIEW rather than a bespoke `<x-filament::button>`: a plain
+     * button looked out of place next to the host's own navigation-styled entries, wherever this
+     * hook lands. A single NavigationItem, not a second Plugin registered on the panel — this
+     * plugin keeps its own identity (getId(), the page registration, canReport()); it only
+     * borrows NavigationItemsPlugin's rendering.
+     */
     protected function renderReportButton(): string
     {
         if (!$this->canReport(auth()->user())) {
             return '';
         }
 
-        return Blade::render(
-            '<x-filament::button tag="a" :href="$href" icon="heroicon-o-bug-ant" color="gray" size="sm">{{ $label }}</x-filament::button>',
-            [
-                // The CURRENT page's own URL, so ReportIssue::mount() can record where the report
-                // actually came from — its own URL would otherwise always just say
-                // ".../report-issue".
-                'href' => ReportIssue::getUrl(['from' => url()->current()]),
-                'label' => __('two-way-ticket::two-way-ticket.report_issue.report_button'),
-            ],
-        );
+        $item = NavigationItem::make()
+            ->label(__('two-way-ticket::two-way-ticket.report_issue.report_button'))
+            ->icon('heroicon-o-bug-ant')
+            // The CURRENT page's own URL, so ReportIssue::mount() can record where the report
+            // actually came from — its own URL would otherwise always just say
+            // ".../report-issue".
+            ->url(ReportIssue::getUrl(['from' => url()->current()]));
+
+        return view(NavigationItemsPlugin::VIEW, ['items' => [$item]])->render();
     }
 }

@@ -27,8 +27,11 @@ See [DEVELOPERS.md](DEVELOPERS.md) for the full design.
 ## What you get
 
 - A Filament resource to browse, filter and triage tickets, with bulk push / close / labelling.
-- A **"Report an issue"** button you can attach to any panel, separately from the admin-only list —
-  reporters never need access to the backlog they report into.
+- A **"Report an issue"** entry point you can attach to any panel, separately from the admin-only
+  list — reporters never need access to the backlog they report into. It renders through
+  `NavigationItemsPlugin`, also exported: a small, generic plugin for placing any list of
+  `NavigationItem` at a Filament render hook (`->renderHook()`, default `USER_MENU_BEFORE`)
+  instead of a panel's own navigation — reuse it for a host's own cross-panel shortcuts.
 - A token-protected JSON API (`/api/tickets`), so scripts and coding agents can file and update
   tickets without a browser.
 - Translations in English, French and Dutch, overridable per app.

@@ -22,7 +22,7 @@ use Magicoli\TwoWayTicket\TicketsPlugin;
  * The full-featured panel: both plugins attached (browsable list AND the report button) — the
  * word-up 'admin' panel's own equivalent.
  */
-class TestAppPanelProvider extends PanelProvider
+class TestAdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {

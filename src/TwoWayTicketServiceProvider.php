@@ -17,6 +17,9 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
         $package
             ->name('two-way-ticket')
             ->hasConfigFile('two-way-ticket')
+            // Registers the 'two-way-ticket::' namespace against resources/views — currently
+            // just navigation-items.blade.php, see NavigationItemsPlugin::VIEW.
+            ->hasViews()
             // Run straight from the package — no publishing step, and no copies in the host app
             // to drift from these. Two things make that work: the timestamp prefix (it's what
             // orders them, an ALTER can't precede its own CREATE) and the plain `.php` extension
