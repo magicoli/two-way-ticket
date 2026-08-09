@@ -1,7 +1,7 @@
 {
     "name": "magicoli/two-way-ticket",
     "description": "Helpdesk truckin' down the track - Flexible ticketing system for Laravel / Filament",
-    "version": "0.3.0",
+    "version": "0.3.1-dev",
     "type": "library",
     "license": "AGPL-3.0-or-later",
     "keywords": [
