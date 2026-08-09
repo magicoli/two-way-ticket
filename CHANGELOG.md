@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+- feat: `NavigationItemsPlugin` — places `NavigationItem` lists at a render hook; `ReportIssuePlugin` uses it instead of a bespoke button
+- feat: default `TicketPolicy` gates the backlog to admins, reporting stays open to any authenticated user
+- feat: `visible($bool|Closure)` on `TicketsPlugin`, `ReportIssuePlugin` and `TicketStatsWidget`
+- feat: editable `app_version` field on the report/ticket form, pre-filled with the running build
+- fix: reporting uses its own `report` ability instead of `create` (the full triage form)
+- fix: `app_version` NOT NULL constraint failures on create, and on clearing it while editing
+- fix: ticket status and Projects weren't pushed to GitHub at creation, only on later syncs
+- fix: the admin test panel was silently unregistered since a stray fixture edit, failing the whole suite
+- update: `app_version` moved from the GitHub sidebar into the report column
+- doc: install steps, AI-agent guidelines (assignees, ticket references), ° vs # convention
+
 ## 0.1.2
 - new: installs on Laravel 12 as well as 13 — Filament v5 already accepted both, only our own
   `illuminate/contracts` constraint stood in the way; the suite runs green against 12.64 and 13.22
