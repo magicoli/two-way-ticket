@@ -4,6 +4,8 @@ namespace Magicoli\TwoWayTicket;
 
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
+use Illuminate\Database\Events\ConnectionEstablished;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Magicoli\TwoWayTicket\Models\Ticket;
 use Magicoli\TwoWayTicket\Policies\TicketPolicy;
@@ -55,6 +57,21 @@ class TwoWayTicketServiceProvider extends PackageServiceProvider
         if (Gate::getPolicyFor(Ticket::class) === null) {
             Gate::policy(Ticket::class, TicketPolicy::class);
         }
+
+        // TicketsTable's word-boundary search (see applyWordSearch()) relies on REGEXP, which
+        // MariaDB/MySQL support natively but SQLite doesn't — registered lazily on connection
+        // rather than eagerly in boot(), so this never forces a DB connection just to check the
+        // driver. A no-op on MariaDB/MySQL.
+        Event::listen(ConnectionEstablished::class, function (ConnectionEstablished $event): void {
+            if ($event->connection->getDriverName() !== 'sqlite') {
+                return;
+            }
+
+            $event->connection->getPdo()->sqliteCreateFunction(
+                'regexp',
+                fn (?string $pattern, ?string $subject): int => (int) preg_match('/' . $pattern . '/u', $subject ?? ''),
+            );
+        });
 
         $this->loadTranslationsFrom(__DIR__ . '/../lang', 'two-way-ticket');
 

@@ -181,3 +181,67 @@ it('replaces instead of adding when asked to', function (): void {
 
     expect($ticket->fresh())->labels->toBe(['question']);
 });
+
+it('searches the ID column as an exact match, not a partial one', function (): void {
+    // Oli, 2026-08-13: "si je tape 10, je dois avoir le ticket 10, pas le 107 ou le 210."
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    $ten = Ticket::factory()->create(['id' => 10]);
+    $oneOhSeven = Ticket::factory()->create(['id' => 107]);
+    $twoTen = Ticket::factory()->create(['id' => 210]);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->searchTable('10')
+        ->assertCanSeeTableRecords([$ten])
+        ->assertCanNotSeeTableRecords([$oneOhSeven, $twoTen]);
+});
+
+it('still finds a number that legitimately appears in the title', function (): void {
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    $matching = Ticket::factory()->create(['title' => 'Fails on line 10 of the parser']);
+    $other = Ticket::factory()->create(['title' => 'Unrelated ticket']);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->searchTable('10')
+        ->assertCanSeeTableRecords([$matching])
+        ->assertCanNotSeeTableRecords([$other]);
+});
+
+it('does not let a shorter number match inside a longer one in free text either', function (): void {
+    // Oli, 2026-08-13: "en cherchant 100, on doit trouver 'offer 100 and all', mais pas si on
+    // cherche 10." The word-boundary rule applies to every searched column, not just id.
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    $ticket = Ticket::factory()->create(['title' => 'Tables: default to 50 rows, offer 100 and all']);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->searchTable('100')
+        ->assertCanSeeTableRecords([$ticket]);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->searchTable('10')
+        ->assertCanNotSeeTableRecords([$ticket]);
+});
+
+it('searches the description even though it has no column of its own', function (): void {
+    // Oli, 2026-08-13: "il faudrait aussi inclure la description dans la recherche, même si elle
+    // n'apparaît pas dans la liste."
+    $user = AdminUser::create(['name' => 'Admin', 'email' => 'admin@example.test']);
+
+    $matching = Ticket::factory()->create([
+        'title' => 'Something broke',
+        'description' => 'Only reproducible with the qwertyuiop123 flag set.',
+    ]);
+    $other = Ticket::factory()->create(['title' => 'Unrelated ticket']);
+
+    Livewire::actingAs($user)
+        ->test(ListTickets::class)
+        ->searchTable('qwertyuiop123')
+        ->assertCanSeeTableRecords([$matching])
+        ->assertCanNotSeeTableRecords([$other]);
+});

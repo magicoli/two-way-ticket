@@ -44,6 +44,10 @@ class TicketsTable
                 // An array state is what makes Filament render one badge per value; the raw
                 // enum values double as the discriminator, since no status value can collide
                 // with a reason one.
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable(query: fn(Builder $query, string $search): Builder => self::applyWordSearch($query, 'id', $search)),
                 TextColumn::make('status')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))
@@ -83,7 +87,12 @@ class TicketsTable
                 TextColumn::make('title')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.title'))
-                    ->searchable()
+                    // 'description' is included so it's searchable without a column of its own.
+                    ->searchable(query: fn(Builder $query, string $search): Builder => self::applyWordSearch(
+                        self::applyWordSearch($query, 'title', $search),
+                        'description',
+                        $search,
+                    ))
                     ->sortable()
                     ->wrap()
                     ->grow()
@@ -461,6 +470,23 @@ class TicketsTable
                 ->title(__('two-way-ticket::two-way-ticket.actions.done', ['count' => $done]))
                 ->send();
         }
+    }
+
+    /**
+     * A purely numeric search is a whole-number match, not a substring one — "10" must not
+     * surface 107, 210, or a ticket whose title merely contains "10" glued to other digits.
+     * REGEXP + \b gets this for free on every column, id included, without an ID-specific
+     * condition: id's string form has nothing else around it, so \b100\b on id degenerates to
+     * an exact match anyway. Anything else keeps the plain substring match, so "parser" still
+     * catches a partial word — and "100" still finds "offer 100 and all".
+     */
+    private static function applyWordSearch(Builder $query, string $column, string $search): Builder
+    {
+        if (ctype_digit($search)) {
+            return $query->orWhereRaw("{$column} REGEXP ?", ['\\b' . $search . '\\b']);
+        }
+
+        return $query->orWhere($column, 'like', "%{$search}%");
     }
 
     /**
