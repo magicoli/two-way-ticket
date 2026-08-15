@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0
+- feat: add ticket ID column, searchable and sortable, add description to search criteria
+
 ## 0.3.0
 - feat: `NavigationItemsPlugin` — places `NavigationItem` lists at a render hook; `ReportIssuePlugin` uses it instead of a bespoke button
 - feat: default `TicketPolicy` gates the backlog to admins, reporting stays open to any authenticated user
