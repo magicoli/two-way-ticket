@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1
+- fix: use magicoli/extra-navigation-items for the report-issue entry instead of local implementation
+- ReportIssuePlugin::register() attaches NavigationItemsPlugin with the report item;
+  renderReportButton() is gone
+- the report item's label is a closure: resolved eagerly at registration
+- drop ->hasViews() (no views remain) and the NavigationItemsPlugin test/view
+- tests register the ExtraNavigationItemsServiceProvider so the registry and its view
+  namespace are available
+
 ## 0.4.0
 - feat: add ticket ID column, searchable and sortable, add description to search criteria
 
