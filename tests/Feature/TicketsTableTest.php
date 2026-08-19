@@ -217,15 +217,9 @@ it('does not let a shorter number match inside a longer one in free text either'
 
     $ticket = Ticket::factory()->create(['title' => 'Tables: default to 50 rows, offer 100 and all']);
 
-    Livewire::actingAs($user)
-        ->test(ListTickets::class)
-        ->searchTable('100')
-        ->assertCanSeeTableRecords([$ticket]);
+    Livewire::actingAs($user)->test(ListTickets::class)->searchTable('100')->assertCanSeeTableRecords([$ticket]);
 
-    Livewire::actingAs($user)
-        ->test(ListTickets::class)
-        ->searchTable('10')
-        ->assertCanNotSeeTableRecords([$ticket]);
+    Livewire::actingAs($user)->test(ListTickets::class)->searchTable('10')->assertCanNotSeeTableRecords([$ticket]);
 });
 
 it('searches the description even though it has no column of its own', function (): void {

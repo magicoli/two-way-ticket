@@ -11,6 +11,7 @@ use Filament\Panel;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
+use Magicoli\ExtraNavigationItems\NavigationItemsPlugin;
 use Magicoli\TwoWayTicket\Filament\Pages\ReportIssue;
 use Magicoli\TwoWayTicket\Models\Ticket;
 
@@ -51,7 +52,27 @@ class ReportIssuePlugin implements Plugin
             ReportIssue::class,
         ]);
 
-        $panel->renderHook($this->renderHookName, fn(): string => $this->renderReportButton());
+        // One entry fed into the menu at this hook through NavigationItemsPlugin, so it MERGES with
+        // a host's own cross-panel shortcuts there instead of standing up a second menu beside
+        // them. This plugin keeps its own identity (getId(), the page, canReport()); it only
+        // contributes that one item to the shared menu. Label, URL and visibility are closures,
+        // resolved per render against the current request and user.
+        $panel->plugin(NavigationItemsPlugin::make()
+            ->renderHook($this->renderHookName)
+            ->items([
+                NavigationItem::make()
+                    // A closure, resolved per render: called eagerly here, at plugin
+                    // registration — before the package's translations are loaded — it would
+                    // load the 'two-way-ticket' group empty and cache it, leaving every key
+                    // in it as a raw string for the rest of the request.
+                    ->label(fn(): string => __('two-way-ticket::two-way-ticket.report_issue.report_button'))
+                    ->icon('heroicon-o-bug-ant')
+                    // The CURRENT page's own URL, so ReportIssue::mount() can record where the
+                    // report came from — its own URL would otherwise always just say
+                    // ".../report-issue".
+                    ->url(fn(): string => ReportIssue::getUrl(['from' => url()->current()]))
+                    ->visible(fn(): bool => $this->canReport(auth()->user())),
+            ]));
     }
 
     public function boot(Panel $panel): void
@@ -123,29 +144,5 @@ class ReportIssuePlugin implements Plugin
         return $this->authorizeReportingUsing !== null
             ? (bool) ($this->authorizeReportingUsing)($user)
             : Gate::forUser($user)->allows('report', Ticket::class);
-    }
-
-    /**
-     * Through NavigationItemsPlugin::VIEW rather than a bespoke `<x-filament::button>`: a plain
-     * button looked out of place next to the host's own navigation-styled entries, wherever this
-     * hook lands. A single NavigationItem, not a second Plugin registered on the panel — this
-     * plugin keeps its own identity (getId(), the page registration, canReport()); it only
-     * borrows NavigationItemsPlugin's rendering.
-     */
-    protected function renderReportButton(): string
-    {
-        if (!$this->canReport(auth()->user())) {
-            return '';
-        }
-
-        $item = NavigationItem::make()
-            ->label(__('two-way-ticket::two-way-ticket.report_issue.report_button'))
-            ->icon('heroicon-o-bug-ant')
-            // The CURRENT page's own URL, so ReportIssue::mount() can record where the report
-            // actually came from — its own URL would otherwise always just say
-            // ".../report-issue".
-            ->url(ReportIssue::getUrl(['from' => url()->current()]));
-
-        return view(NavigationItemsPlugin::VIEW, ['items' => [$item]])->render();
     }
 }

@@ -101,9 +101,7 @@ it('saves an edited ticket whose version is empty, instead of dying on the const
         ->call('save')
         ->assertHasNoFormErrors();
 
-    expect($ticket->fresh())
-        ->description->toBe('edited')
-        ->app_version->toBe('');
+    expect($ticket->fresh())->description->toBe('edited')->app_version->toBe('');
 });
 
 it('leaves app_version alone when it is set on purpose, empty included', function (): void {

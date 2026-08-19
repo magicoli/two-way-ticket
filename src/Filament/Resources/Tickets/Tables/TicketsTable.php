@@ -47,7 +47,13 @@ class TicketsTable
                 TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
-                    ->searchable(query: fn(Builder $query, string $search): Builder => self::applyWordSearch($query, 'id', $search)),
+                    ->searchable(
+                        query: fn(Builder $query, string $search): Builder => self::applyWordSearch(
+                            $query,
+                            'id',
+                            $search,
+                        ),
+                    ),
                 TextColumn::make('status')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label(__('two-way-ticket::two-way-ticket.field.status'))

@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-use Magicoli\TwoWayTicket\NavigationItemsPlugin;
 use Magicoli\TwoWayTicket\Tests\Fixtures\User;
 
 /**
- * The report button used to be a bespoke `<x-filament::button>` (`Blade::render('<x-filament::
- * button tag="a" ...')`) — visually out of place next to real navigation entries. It now renders
- * through NavigationItemsPlugin::VIEW instead, the same one a host's own cross-panel shortcuts
- * would use — see ReportIssuePlugin::renderReportButton().
+ * The report button used to be a bespoke `<x-filament::button>` — visually out of place next to
+ * real navigation entries. It now feeds a single item into magicoli/extra-navigation-items'
+ * NavigationItemsPlugin, so it renders as a real navigation item and merges into the one menu at
+ * its hook rather than standing up a second one — see ReportIssuePlugin::register().
  */
 it('renders the report entry through NavigationItemsPlugin, not a bespoke button', function (): void {
     $user = User::create(['name' => 'Reporter', 'email' => 'reporter@example.test']);
@@ -25,9 +24,7 @@ it('renders the report entry through NavigationItemsPlugin, not a bespoke button
     expect($hrefPos)->not->toBeFalse();
 
     $window = substr($html, max(0, $hrefPos - 400), 600);
-    expect($window)
-        ->toContain('fi-topbar-item')
-        ->not->toContain('fi-btn');
+    expect($window)->toContain('fi-topbar-item')->not->toContain('fi-btn');
 });
 
 it('drops the report entry entirely once canReport() says no', function (): void {
@@ -40,12 +37,4 @@ it('drops the report entry entirely once canReport() says no', function (): void
     expect($html)->not->toContain('/admin/report-issue');
 
     \Magicoli\TwoWayTicket\ReportIssuePlugin::make()->visible(null);
-});
-
-it('exposes the view constant ReportIssuePlugin depends on', function (): void {
-    // A regression here means ReportIssuePlugin's own view(NavigationItemsPlugin::VIEW, ...)
-    // call silently starts rendering a view that no longer exists — render(), not just view(),
-    // since resolving a missing view only throws at render time, not at view() call time.
-    expect(NavigationItemsPlugin::VIEW)->toBe('two-way-ticket::navigation-items');
-    expect(view(NavigationItemsPlugin::VIEW, ['items' => []])->render())->toBeString();
 });

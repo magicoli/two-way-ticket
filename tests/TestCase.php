@@ -20,6 +20,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Schema;
 use Livewire\LivewireServiceProvider;
+use Magicoli\ExtraNavigationItems\ExtraNavigationItemsServiceProvider;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidget;
 use Magicoli\TwoWayTicket\ReportIssuePlugin;
 use Magicoli\TwoWayTicket\Tests\Fixtures\TestAdminPanelProvider;
@@ -72,6 +73,7 @@ abstract class TestCase extends Orchestra
             TablesServiceProvider::class,
             WidgetsServiceProvider::class,
             FilamentServiceProvider::class,
+            ExtraNavigationItemsServiceProvider::class,
             TwoWayTicketServiceProvider::class,
             TestAdminPanelProvider::class,
             TestAppPanelProvider::class,
