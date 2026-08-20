@@ -111,3 +111,20 @@ it('marks the active stat with more than a colour', function (): void {
 it('is registered above the list', function (): void {
     expect((fn() => $this->getHeaderWidgets())->call(new ListTickets()))->toContain(TicketStatsWidget::class);
 });
+
+/**
+ * filament:optimize caches each panel's registered widgets with var_export(); a registered
+ * TicketStatsWidget::make() is an object, so it emits ClassName::__set_state([...]). Without that
+ * method the cached panel fataled on load, 500-ing every request. Round-trip through var_export()
+ * exactly as the cache does.
+ */
+it('survives the var_export round-trip filament:optimize uses to cache panels', function (): void {
+    $config = TicketStatsWidget::make();
+
+    $restored = eval('return ' . var_export($config, true) . ';');
+
+    expect($restored)
+        ->toBeInstanceOf(\Magicoli\TwoWayTicket\Filament\Resources\Tickets\Widgets\TicketStatsWidgetConfiguration::class)
+        ->and($restored->widget)
+        ->toBe(TicketStatsWidget::class);
+});

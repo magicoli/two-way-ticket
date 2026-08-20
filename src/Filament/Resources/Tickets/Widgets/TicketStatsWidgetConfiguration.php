@@ -37,4 +37,19 @@ class TicketStatsWidgetConfiguration extends WidgetConfiguration
 
         return $this;
     }
+
+    /**
+     * Filament caches every panel's registered widgets with `var_export()` (via
+     * `filament:optimize`, run on deploy). A registered `TicketStatsWidget::make()` is an object,
+     * so `var_export()` emits `self::__set_state([...])`; without this method, loading the cache
+     * fatals with "Call to undefined method ...::__set_state()" on every request. The base
+     * {@see WidgetConfiguration} does not define it, so the whole `->widgets([Widget::make()...])`
+     * pattern this class exists for would break under caching — restore the object here instead.
+     *
+     * @param  array{widget: class-string<TicketStatsWidget>, properties?: array<string, mixed>}  $state
+     */
+    public static function __set_state(array $state): static
+    {
+        return new static($state['widget'], $state['properties'] ?? []);
+    }
 }
