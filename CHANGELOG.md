@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.3
+- feat: choose the ticket resource's navigation group and order from the consuming panel — `TicketsPlugin::make()->group(...)->sort(...)`, read back by the resource and resolved per request so the group label can be translated
+
 ## 0.4.2
 - fix: make the stats widget config cacheable under `filament:optimize` 
 - `TicketStatsWidgetConfiguration` gained `__set_state()`, so a panel registering `TicketStatsWidget::make()` no longer 500s once the panel cache is built
