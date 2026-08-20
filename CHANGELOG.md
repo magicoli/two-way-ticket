@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+- fix: make the stats widget config cacheable under `filament:optimize` 
+- `TicketStatsWidgetConfiguration` gained `__set_state()`, so a panel registering `TicketStatsWidget::make()` no longer 500s once the panel cache is built
+
 ## 0.4.1
 - fix: use magicoli/extra-navigation-items for the report-issue entry instead of local implementation
 - ReportIssuePlugin::register() attaches NavigationItemsPlugin with the report item;
