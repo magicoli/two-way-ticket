@@ -9,6 +9,7 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Magicoli\TwoWayTicket\Filament\Resources\Tickets\TicketResource;
 use Magicoli\TwoWayTicket\Policies\TicketPolicy;
+use UnitEnum;
 
 /**
  * Registers the browsable ticket list/management resource — attach this to whichever panel(s)
@@ -58,6 +59,60 @@ class TicketsPlugin implements Plugin
     public static function isVisible(): ?bool
     {
         return static::$isVisible === null ? null : (bool) value(static::$isVisible);
+    }
+
+    /** @var (Closure(): (string|UnitEnum|null))|string|UnitEnum|null */
+    protected static string|UnitEnum|Closure|null $navigationGroup = null;
+
+    /** @var (Closure(): (int|null))|int|null */
+    protected static int|Closure|null $navigationSort = null;
+
+    /**
+     * Choose the navigation group the ticket resource sits in, from the CONSUMING panel — the
+     * group is the host app's call, not the package's, so it cannot live in the resource:
+     *
+     *     TicketsPlugin::make()->group(fn (): string => __('app.admin'))
+     *
+     * Kept on the class, like {@see visible()}, because the resource is asked statically long
+     * after this plugin object was configured. Null (the default) leaves the resource ungrouped.
+     *
+     * @param  (Closure(): (string|UnitEnum|null))|string|UnitEnum|null  $group
+     */
+    public function group(string|UnitEnum|Closure|null $group): static
+    {
+        static::$navigationGroup = $group;
+
+        return $this;
+    }
+
+    /**
+     * Order the ticket resource within its navigation group, from the consuming panel.
+     *
+     *     TicketsPlugin::make()->sort(90)
+     *
+     * @param  (Closure(): (int|null))|int|null  $sort
+     */
+    public function sort(int|Closure|null $sort): static
+    {
+        static::$navigationSort = $sort;
+
+        return $this;
+    }
+
+    /**
+     * The group chosen at registration, or null when the host app set none.
+     */
+    public static function navigationGroup(): string|UnitEnum|null
+    {
+        return value(static::$navigationGroup);
+    }
+
+    /**
+     * The sort chosen at registration, or null when the host app set none.
+     */
+    public static function navigationSort(): ?int
+    {
+        return value(static::$navigationSort);
     }
 
     public function register(Panel $panel): void

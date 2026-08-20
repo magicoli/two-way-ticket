@@ -18,6 +18,7 @@ use Magicoli\TwoWayTicket\Filament\Resources\Tickets\Tables\TicketsTable;
 use Magicoli\TwoWayTicket\Models\Ticket;
 use Magicoli\TwoWayTicket\Policies\TicketPolicy;
 use Magicoli\TwoWayTicket\TicketsPlugin;
+use UnitEnum;
 
 class TicketResource extends Resource
 {
@@ -39,6 +40,23 @@ class TicketResource extends Resource
     public static function canViewAny(): bool
     {
         return TicketsPlugin::isVisible() ?? parent::canViewAny();
+    }
+
+    /**
+     * The navigation group is the consuming panel's choice, set with
+     * `TicketsPlugin::make()->group(...)`; without one, the resource stays ungrouped.
+     */
+    public static function getNavigationGroup(): string|UnitEnum|null
+    {
+        return TicketsPlugin::navigationGroup() ?? parent::getNavigationGroup();
+    }
+
+    /**
+     * Likewise for the ordering within that group, set with `TicketsPlugin::make()->sort(...)`.
+     */
+    public static function getNavigationSort(): ?int
+    {
+        return TicketsPlugin::navigationSort() ?? parent::getNavigationSort();
     }
 
     public static function getModelLabel(): string

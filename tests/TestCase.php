@@ -43,7 +43,7 @@ abstract class TestCase extends Orchestra
         parent::setUp();
 
         TicketStatsWidget::visibleWhen(null);
-        TicketsPlugin::make()->visible(null);
+        TicketsPlugin::make()->visible(null)->group(null)->sort(null);
         ReportIssuePlugin::make()->visible(null);
     }
 
