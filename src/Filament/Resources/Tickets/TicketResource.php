@@ -28,6 +28,12 @@ class TicketResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    // Tickets track the app itself, not any tenant's data — Ticket has no relationship to a host
+    // app's tenant model and never should. Without this, Filament tries to auto-scope the
+    // resource by tenant on any panel that has tenancy enabled and errors looking for a
+    // relationship that doesn't exist (and conceptually shouldn't).
+    protected static bool $isScopedToTenant = false;
+
     /**
      * A condition set with `TicketsPlugin::make()->visible(...)` wins; without one, the policy
      * decides ({@see TicketPolicy}).
